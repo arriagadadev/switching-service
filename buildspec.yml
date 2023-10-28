@@ -1,0 +1,19 @@
+version: 0.2
+run-as: root
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - npm install yarn serverless --location=global
+      - yarn
+  build:
+    commands:
+      # Get aws account id
+      - export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - printf '%s\n' "AWS_ACCOUNT=$AWS_ACCOUNT_ID" >>.env
+      - serverless deploy --stage ${STAGE} --region ${AWS_REGION}
+
+cache:
+  paths:
+    - node_modules
