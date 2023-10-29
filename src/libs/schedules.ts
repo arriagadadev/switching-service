@@ -1,5 +1,4 @@
 import dynamodb from './dynamodb';
-import { v4 as uuidv4 } from 'uuid';
 import { Schedule, ScheduleInput, UpdateScheduleInput } from '../types';
 import HttpError from './error';
 
@@ -45,7 +44,6 @@ export const getScheduleById = async (id: string) => {
 export const storeSchedule = async (schedule: ScheduleInput) => {
   const newSchedule: Schedule = {
     ...schedule,
-    id: uuidv4(),
     revision: 1,
     isActive: 'true'
   };

@@ -2,7 +2,7 @@ import { formatJSONResponse } from '@libs/api-gateway';
 import { middyfy } from '@libs/lambda';
 import { storeSchedule } from '@libs/schedules';
 import { ScheduleResource, ScheduleInput, StoreScheduleBody } from 'src/types';
-import eventBridge from '@libs/eventBridge';
+import scheduler from '@libs/scheduler';
 import { v4 as uuidv4 } from 'uuid';
 import { isCron } from '@utils/validations';
 
@@ -32,43 +32,32 @@ const createSchedule = async (event) => {
     const params = {
       Name: uuid,
       ScheduleExpression: `cron(${body.cron})`,
+      ScheduleExpressionTimezone: 'America/Santiago',
       State: body.isEnabled ? 'ENABLED' : 'DISABLED',
+      FlexibleTimeWindow: {
+        Mode: 'OFF',
+      },
+      Target: {
+        Arn: `arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT}:function:switching-service-${STAGE}-turnState`,
+        RoleArn: process.env.SCHEDULER_ROLE_ARN,
+        Input: JSON.stringify({
+          scheduleId: uuid,
+        }),
+      }
     };
     let ruleArn: string;
     try {
-      const result = await eventBridge.putRule(params).promise();
-      if (!result.RuleArn) {
+      const result = await scheduler.createSchedule(params).promise();
+      if (!result.ScheduleArn) {
         throw new Error('Error creating rule');
       }
-      ruleArn = result.RuleArn;
+      ruleArn = result.ScheduleArn;
     } catch (e) {
       console.log(e);
       return formatJSONResponse({
       message: 'Error creating rule',
       }, 500);
     }
-
-    const createTargetParams = {
-      Rule: uuid,
-      Targets: [
-        {
-          Arn: `arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT}:function:switching-service-${STAGE}-turnState`,
-          Id: uuidv4(),
-          Input: JSON.stringify({
-            scheduleId: uuid,
-          }),
-        },
-      ],
-    };
-    try {
-      await eventBridge.putTargets(createTargetParams).promise();
-    } catch (e) {
-      console.log(e);
-      return formatJSONResponse({
-        message: 'Error creating target',
-      }, 500);
-    }
-    
 
     const newSchedule: ScheduleInput = {
       ...body,

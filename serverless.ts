@@ -48,33 +48,41 @@ const serverlessConfiguration: AWS = {
           `arn:aws:dynamodb:${region}:*:table/${schedulesTableName}/index/*`,
         ],
       },
-      // Allow rds describe db instances
       {
         Effect: 'Allow',
         Action: [
+          'rds:StartDBInstance',
+          'rds:StopDBInstance',
           'rds:DescribeDBInstances',
         ],
         Resource: '*',
       },
-      // Allow ec2 describe instances
       {
         Effect: 'Allow',
         Action: [
           'ec2:DescribeInstances',
+          'ec2:StartInstances',
+          'ec2:StopInstances',
         ],
         Resource: '*',
       },
-      // add events put rule and put targets
       {
         Effect: 'Allow',
         Action: [
-          'events:PutRule',
-          'events:PutTargets',
-          'events:RemoveTargets',
-          'events:DeleteRule'
+          'scheduler:*',
         ],
         Resource: '*',
       },
+      {
+        Effect: 'Allow',
+        Action: 'iam:PassRole',
+        Resource: 'arn:aws:iam::*:role/*',
+        Condition: {
+          StringLike: {
+            'iam:PassedToService': 'scheduler.amazonaws.com'
+          }
+        }
+      }
     ],
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
@@ -83,6 +91,9 @@ const serverlessConfiguration: AWS = {
       RESOURCES_STATES_TABLE: resourcesStatesTableName,
       SCHEDULES_TABLE: schedulesTableName,
       AWS_ACCOUNT: '${env:AWS_ACCOUNT}',
+      SCHEDULER_ROLE_ARN: {
+        'Fn::GetAtt': ['SchedulerRole', 'Arn']
+      },
     },
   },
   resources: {
@@ -162,6 +173,41 @@ const serverlessConfiguration: AWS = {
             WriteCapacityUnits: 5,
           }, */
           BillingMode: "PAY_PER_REQUEST"
+        },
+      },
+      SchedulerRole: {
+        Type: 'AWS::IAM::Role',
+        Properties: {
+          RoleName: `${serviceName}-scheduler-role-${stage}`,
+          AssumeRolePolicyDocument: {
+            Version: '2012-10-17',
+            Statement: [
+              {
+                Effect: 'Allow',
+                Principal: { Service: 'scheduler.amazonaws.com' },
+                Action: 'sts:AssumeRole',
+              },
+            ],
+          },
+          Policies: [
+            {
+              PolicyName: `${serviceName}-scheduler-policy-${stage}`,
+              PolicyDocument: {
+                Version: '2012-10-17',
+                Statement: [
+                  {
+                    Effect: 'Allow',
+                    Action: [
+                      'lambda:InvokeFunction',
+                      'lambda:InvokeAsync',
+                      'sqs:SendMessage',
+                    ],
+                    Resource: '*',
+                  },
+                ],
+              },
+            },
+          ],
         },
       },
     }

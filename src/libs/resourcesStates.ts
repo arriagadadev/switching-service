@@ -112,7 +112,10 @@ export const changeResourceState = async (resourceStateId: string, state: 0|1) =
     Key: {
       id: resourceStateId,
     },
-    UpdateExpression: 'SET state = :state',
+    UpdateExpression: 'SET #state = :state',
+    ExpressionAttributeNames: {
+      '#state': 'state',
+    },
     ExpressionAttributeValues: {
       ':state': state,
     },

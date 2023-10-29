@@ -2,8 +2,12 @@ import { formatJSONResponse } from '@libs/api-gateway';
 import { middyfy } from '@libs/lambda';
 import { updateSchedule, getScheduleById } from '@libs/schedules';
 import { ScheduleResource, UpdateScheduleInput, UpdateScheduleBody } from 'src/types';
-import eventBridge from '@libs/eventBridge';
+import scheduler from '@libs/scheduler';
 import { isCron } from '@utils/validations';
+
+const STAGE = process.env.STAGE;
+const AWS_ACCOUNT = process.env.AWS_ACCOUNT;
+const AWS_REGION = process.env.AWS_REGION;
 
 const editSchedule = async (event) => {
   try {
@@ -33,16 +37,26 @@ const editSchedule = async (event) => {
       }, 404);
     }
 
-    const ruleName = oldSchedule.ruleArn.split('/').pop();
-
+    const scheduleName = oldSchedule.ruleArn.split('/').pop();
     const params = {
-      Name: ruleName,
+      Name: scheduleName,
       ScheduleExpression: `cron(${body.cron})`,
+      ScheduleExpressionTimezone: 'America/Santiago',
       State: body.isEnabled ? 'ENABLED' : 'DISABLED',
+      FlexibleTimeWindow: {
+        Mode: 'OFF', 
+      },
+      Target: {
+        Arn: `arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT}:function:switching-service-${STAGE}-turnState`,
+        RoleArn: process.env.SCHEDULER_ROLE_ARN,
+        Input: JSON.stringify({
+          scheduleId,
+        }),
+      }
     };
     try {
-      const result = await eventBridge.putRule(params).promise();
-      if (!result.RuleArn) {
+      const result = await scheduler.updateSchedule(params).promise();
+      if (!result.ScheduleArn) {
         throw new Error('Error creating rule');
       }
     } catch (error) {

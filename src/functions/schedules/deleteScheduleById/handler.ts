@@ -1,7 +1,7 @@
 import { formatJSONResponse } from '@libs/api-gateway';
 import { middyfy } from '@libs/lambda';
 import { deleteScheduleById, getScheduleById } from '@libs/schedules';
-import eventBridge from '@libs/eventBridge';
+import scheduler from '@libs/scheduler';
 
 const removeSchedule = async (event) => {
   try {
@@ -13,21 +13,10 @@ const removeSchedule = async (event) => {
       }, 404);
     }
     const ruleName = schedule.ruleArn.split('/').pop();
-    const targets = await eventBridge.listTargetsByRule({ Rule: ruleName }).promise()
-    console.log('targets', targets)
-    const targetIds = targets.Targets.map(target => target.Id);
-    if (targetIds.length > 0) {
-      const removeTargetsParams = {
-        Rule: ruleName,
-        Ids: targetIds
-      };
-
-      await eventBridge.removeTargets(removeTargetsParams).promise();
-    }
-    const deleteRuleParams = {
+    const deleteScheduleParams = {
       Name: ruleName
     };
-    await eventBridge.deleteRule(deleteRuleParams).promise();
+    await scheduler.deleteSchedule(deleteScheduleParams).promise();
     const deletedSchedule = await deleteScheduleById(scheduleId);
     return formatJSONResponse(deletedSchedule);
   } catch ({ message, statusCode = 500 }) {
