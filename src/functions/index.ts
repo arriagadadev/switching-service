@@ -7,6 +7,8 @@ import deleteResourceStateById from './resourcesStates/deleteResourceStateById';
 import processResourceStateChange from './resourcesStates/processResourceStateChange';
 import checkResourcesStates from './resourcesStates/checkResourcesStates';
 import turnState from './resourcesStates/turnState';
+import startResource from './resourcesStates/startResource';
+import stopResource from './resourcesStates/stopResource';
 
 import getSchedules from './schedules/getSchedules';
 import getScheduleById from './schedules/getScheduleById';
@@ -23,6 +25,8 @@ export default {
     processResourceStateChange,
     checkResourcesStates,
     turnState,
+    startResource,
+    stopResource,
     getSchedules,
     getScheduleById,
     storeSchedule,
