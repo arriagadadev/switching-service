@@ -13,8 +13,7 @@ const serverlessConfiguration: AWS = {
   frameworkVersion: '3',
   plugins: [
     'serverless-dotenv-plugin',
-    'serverless-esbuild',
-    'serverless-offline'
+    'serverless-esbuild'
   ],
   useDotenv: true,
   provider: {
@@ -65,6 +64,13 @@ const serverlessConfiguration: AWS = {
           'ec2:StopInstances',
         ],
         Resource: '*',
+      },
+      {
+        Effect: "Allow",
+        Action: [
+          "ecs:*",
+        ],
+        Resource: "*"
       },
       {
         Effect: 'Allow',
@@ -130,12 +136,6 @@ const serverlessConfiguration: AWS = {
           StreamSpecification: {
             StreamViewType: 'NEW_AND_OLD_IMAGES',
           },
-          /*
-            Activar esto y quitar el modo pay per request si ya conocemos el flujo esperado de esto 
-            ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5,
-          }, */
           BillingMode: "PAY_PER_REQUEST"
         },
       },
@@ -166,12 +166,6 @@ const serverlessConfiguration: AWS = {
               },
             }
           ],
-          /*
-            Activar esto y quitar el modo pay per request si ya conocemos el flujo esperado de esto 
-            ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5,
-          }, */
           BillingMode: "PAY_PER_REQUEST"
         },
       },
@@ -204,6 +198,14 @@ const serverlessConfiguration: AWS = {
                     ],
                     Resource: '*',
                   },
+                  {
+                    Effect: "Allow",
+                    Action: [
+                      "ecs:UpdateService",
+                      "ecs:DescribeServices"
+                    ],
+                    Resource: "*"
+                  },
                 ],
               },
             },
@@ -219,16 +221,11 @@ const serverlessConfiguration: AWS = {
       bundle: true,
       minify: false,
       sourcemap: true,
-      exclude: ['aws-sdk'],
-      target: 'node16',
+      exclude: [],
+      target: 'node20',
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,
-    },
-    'serverless-offline': {
-      httpPort: 4000,
-      websocketPort: 4001,
-      lambdaPort: 4002,
     },
   },
 };
