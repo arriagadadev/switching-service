@@ -18,7 +18,7 @@ const getRawECSStateById = async (id: string): Promise<string | null> => {
     const [cluster, service] = id.split('/');
     try {
         const isOn = await isServicePoweredOn(cluster, service);
-        return isOn ? 'running' : 'stopped';
+        return isOn ? 'available' : 'stopped';
     } catch (error) {
         console.error(`Error getting ECS service state for ${id}:`, error);
         return null;
@@ -110,7 +110,7 @@ export const shutDownResource = async (resourceState: ResourceState) => {
         await ec2Client.stopInstances(params).promise();
     } else if (type === 'ECS') {
         const [cluster, service] = resourceIdentifier.split('/');
-        await powerOffService(cluster, service), true;
+        await powerOffService(cluster, service, false);
     }
 }
 
@@ -128,6 +128,6 @@ export const startResource = async (resourceState: ResourceState) => {
         await ec2Client.startInstances(params).promise();
     } else if (type === 'ECS') {
         const [cluster, service] = resourceIdentifier.split('/');
-        await powerOnService(cluster, service, true);
+        await powerOnService(cluster, service, false);
     }
 }
