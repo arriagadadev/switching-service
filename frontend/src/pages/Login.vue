@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-center bg-grey-2">
+  <div class="flex flex-center bg-grey-2" style="min-height: 100vh">
     <q-card class="q-pa-md" style="min-width: 400px">
       <q-card-section>
         <div class="text-h6 text-center q-mb-md">Iniciar Sesión</div>
@@ -33,7 +33,7 @@
         </q-form>
       </q-card-section>
     </q-card>
-  </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">
