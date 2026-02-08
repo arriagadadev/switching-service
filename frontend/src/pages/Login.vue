@@ -2,7 +2,9 @@
   <div class="flex flex-center bg-grey-2" style="min-height: 100vh">
     <q-card class="q-pa-md" style="min-width: 400px">
       <q-card-section>
-        <div class="text-h6 text-center q-mb-md">Iniciar Sesión</div>
+        <div class="text-h6 text-center q-mb-md">
+          {{ isNewPasswordRequired ? 'Cambiar Contraseña' : 'Iniciar Sesión' }}
+        </div>
         <q-form @submit="onSubmit" class="q-gutter-md">
           <q-input
             v-model="email"
@@ -10,17 +12,41 @@
             type="email"
             :rules="[(val) => !!val || 'Email es requerido']"
             outlined
+            :disable="isNewPasswordRequired"
           />
           <q-input
+            v-if="!isNewPasswordRequired"
             v-model="password"
             label="Contraseña"
             type="password"
             :rules="[(val) => !!val || 'Contraseña es requerida']"
             outlined
           />
+          <template v-else>
+            <q-input
+              v-model="newPassword"
+              label="Nueva Contraseña"
+              type="password"
+              :rules="[
+                (val) => !!val || 'Nueva contraseña es requerida',
+                (val) => (val && val.length >= 8) || 'La contraseña debe tener al menos 8 caracteres',
+              ]"
+              outlined
+            />
+            <q-input
+              v-model="confirmPassword"
+              label="Confirmar Nueva Contraseña"
+              type="password"
+              :rules="[
+                (val) => !!val || 'Confirma la contraseña',
+                (val) => val === newPassword || 'Las contraseñas no coinciden',
+              ]"
+              outlined
+            />
+          </template>
           <div>
             <q-btn
-              label="Iniciar Sesión"
+              :label="isNewPasswordRequired ? 'Cambiar Contraseña' : 'Iniciar Sesión'"
               type="submit"
               color="primary"
               class="full-width"
@@ -60,14 +86,14 @@ const onSubmit = async () => {
   try {
     if (isNewPasswordRequired.value) {
       // Manejar cambio de contraseña
-      if (newPassword.value !== confirmPassword.value) {
-        error.value = 'Las contraseñas no coinciden';
+      if (!newPassword.value || newPassword.value.length < 8) {
+        error.value = 'La contraseña debe tener al menos 8 caracteres';
         loading.value = false;
         return;
       }
 
-      if (newPassword.value.length < 8) {
-        error.value = 'La contraseña debe tener al menos 8 caracteres';
+      if (newPassword.value !== confirmPassword.value) {
+        error.value = 'Las contraseñas no coinciden';
         loading.value = false;
         return;
       }
@@ -96,6 +122,11 @@ const onSubmit = async () => {
       if (result.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
         isNewPasswordRequired.value = true;
         session.value = result;
+        // Limpiar los campos
+        password.value = '';
+        newPassword.value = '';
+        confirmPassword.value = '';
+        error.value = '';
         $q.notify({
           type: 'info',
           message: 'Debes cambiar tu contraseña temporal',
