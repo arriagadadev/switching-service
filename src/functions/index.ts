@@ -16,6 +16,9 @@ import storeSchedule from './schedules/storeSchedule';
 import updateSchedule from './schedules/updateSchedule';
 import deleteScheduleById from './schedules/deleteScheduleById';
 
+import listEC2Instances from './awsResources/listEC2Instances';
+import listRDSInstances from './awsResources/listRDSInstances';
+
 export default {
     getResourcesStates,
     getResourceStateById,
@@ -32,4 +35,6 @@ export default {
     storeSchedule,
     updateSchedule,
     deleteScheduleById,
+    listEC2Instances,
+    listRDSInstances,
 }

@@ -298,7 +298,86 @@
               outlined
               hint="Nombre descriptivo para el recurso"
             />
+            <q-select
+              v-if="resourceForm.type === 'EC2'"
+              v-model="resourceForm.resourceIdentifier"
+              :options="filteredEC2Options"
+              option-label="label"
+              option-value="value"
+              label="Instancia EC2 *"
+              :rules="[(val) => !!val || 'Selecciona una instancia EC2']"
+              outlined
+              use-input
+              input-debounce="300"
+              @filter="filterEC2Instances"
+              hint="Busca y selecciona una instancia EC2 de tu cuenta"
+              :loading="loadingEC2Instances"
+            >
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    {{ loadingEC2Instances ? 'Cargando instancias...' : 'No se encontraron instancias' }}
+                  </q-item-section>
+                </q-item>
+              </template>
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section avatar>
+                    <q-icon
+                      :name="scope.opt.state === 'running' ? 'check_circle' : 'cancel'"
+                      :color="scope.opt.state === 'running' ? 'positive' : 'negative'"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                    <q-item-label caption>
+                      {{ scope.opt.instanceId }} - {{ scope.opt.instanceType }} ({{ scope.opt.state }})
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+            <q-select
+              v-else-if="resourceForm.type === 'RDS'"
+              v-model="resourceForm.resourceIdentifier"
+              :options="filteredRDSOptions"
+              option-label="label"
+              option-value="value"
+              label="Instancia RDS *"
+              :rules="[(val) => !!val || 'Selecciona una instancia RDS']"
+              outlined
+              use-input
+              input-debounce="300"
+              @filter="filterRDSInstances"
+              hint="Busca y selecciona una instancia RDS de tu cuenta"
+              :loading="loadingRDSInstances"
+            >
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    {{ loadingRDSInstances ? 'Cargando instancias...' : 'No se encontraron instancias' }}
+                  </q-item-section>
+                </q-item>
+              </template>
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section avatar>
+                    <q-icon
+                      :name="scope.opt.status === 'available' ? 'check_circle' : 'cancel'"
+                      :color="scope.opt.status === 'available' ? 'positive' : 'negative'"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                    <q-item-label caption>
+                      {{ scope.opt.value }} - {{ scope.opt.engine }} ({{ scope.opt.status }})
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
             <q-input
+              v-else
               v-model="resourceForm.resourceIdentifier"
               label="Identificador del Recurso (ARN) *"
               :rules="[(val) => !!val || 'Identificador es requerido']"
@@ -321,6 +400,7 @@
               outlined
               emit-value
               map-options
+              @update:model-value="onResourceTypeChange"
             >
               <template v-slot:option="scope">
                 <q-item v-bind="scope.itemProps">
@@ -433,9 +513,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { resourcesService } from '../services/resources';
+import { awsResourcesService, type EC2Instance, type RDSInstance } from '../services/awsResources';
 import type {
   ResourceStateResource,
   StoreResourceStateBody,
@@ -463,6 +544,16 @@ const resourceForm = ref<StoreResourceStateBody>({
   resourceIdentifier: '',
   type: 'RDS',
 });
+
+// Estados para instancias AWS
+const loadingEC2Instances = ref(false);
+const loadingRDSInstances = ref(false);
+const ec2Instances = ref<EC2Instance[]>([]);
+const rdsInstances = ref<RDSInstance[]>([]);
+const ec2InstancesOptions = ref<any[]>([]);
+const rdsInstancesOptions = ref<any[]>([]);
+const filteredEC2Options = ref<any[]>([]);
+const filteredRDSOptions = ref<any[]>([]);
 
 const resourceTypes = [
   { label: 'RDS', value: 'RDS', icon: 'storage', description: 'Amazon RDS Database' },
@@ -660,8 +751,107 @@ const resetForm = () => {
     resourceIdentifier: '',
     type: 'RDS',
   };
+  filteredEC2Options.value = [];
+  filteredRDSOptions.value = [];
   if (resourceFormRef.value) {
     resourceFormRef.value.resetValidation();
+  }
+};
+
+const loadEC2Instances = async () => {
+  if (ec2Instances.value.length > 0) return; // Ya cargadas
+  loadingEC2Instances.value = true;
+  try {
+    const instances = await awsResourcesService.getEC2Instances();
+    ec2Instances.value = instances;
+    ec2InstancesOptions.value = instances.map((instance) => ({
+      label: instance.name,
+      value: instance.instanceId,
+      instanceId: instance.instanceId,
+      instanceType: instance.instanceType,
+      state: instance.state,
+    }));
+    filteredEC2Options.value = ec2InstancesOptions.value;
+  } catch (error: any) {
+    $q.notify({
+      type: 'negative',
+      message: error.message || 'Error al cargar instancias EC2',
+      position: 'top',
+    });
+  } finally {
+    loadingEC2Instances.value = false;
+  }
+};
+
+const loadRDSInstances = async () => {
+  if (rdsInstances.value.length > 0) return; // Ya cargadas
+  loadingRDSInstances.value = true;
+  try {
+    const instances = await awsResourcesService.getRDSInstances();
+    rdsInstances.value = instances;
+    rdsInstancesOptions.value = instances.map((instance) => ({
+      label: instance.name,
+      value: instance.dbInstanceIdentifier,
+      dbInstanceIdentifier: instance.dbInstanceIdentifier,
+      engine: instance.engine,
+      status: instance.status,
+    }));
+    filteredRDSOptions.value = rdsInstancesOptions.value;
+  } catch (error: any) {
+    $q.notify({
+      type: 'negative',
+      message: error.message || 'Error al cargar instancias RDS',
+      position: 'top',
+    });
+  } finally {
+    loadingRDSInstances.value = false;
+  }
+};
+
+const filterEC2Instances = (val: string, update: (callback: () => void) => void) => {
+  if (val === '') {
+    update(() => {
+      filteredEC2Options.value = ec2InstancesOptions.value;
+    });
+    return;
+  }
+
+  update(() => {
+    const needle = val.toLowerCase();
+    filteredEC2Options.value = ec2InstancesOptions.value.filter(
+      (v) =>
+        v.label.toLowerCase().indexOf(needle) > -1 ||
+        v.instanceId.toLowerCase().indexOf(needle) > -1 ||
+        v.instanceType.toLowerCase().indexOf(needle) > -1
+    );
+  });
+};
+
+const filterRDSInstances = (val: string, update: (callback: () => void) => void) => {
+  if (val === '') {
+    update(() => {
+      filteredRDSOptions.value = rdsInstancesOptions.value;
+    });
+    return;
+  }
+
+  update(() => {
+    const needle = val.toLowerCase();
+    filteredRDSOptions.value = rdsInstancesOptions.value.filter(
+      (v) =>
+        v.label.toLowerCase().indexOf(needle) > -1 ||
+        v.value.toLowerCase().indexOf(needle) > -1 ||
+        v.engine.toLowerCase().indexOf(needle) > -1
+    );
+  });
+};
+
+const onResourceTypeChange = (newType: ResourceType) => {
+  resourceForm.value.resourceIdentifier = ''; // Limpiar selección anterior
+  if (newType === 'EC2') {
+    loadEC2Instances();
+  } else if (newType === 'RDS') {
+    loadRDSInstances();
   }
 };
 
