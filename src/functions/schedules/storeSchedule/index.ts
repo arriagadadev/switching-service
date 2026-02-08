@@ -1,5 +1,5 @@
 import { handlerPath } from '@libs/handler-resolver';
-import { cors } from '../../../../serverless/parameters';
+import { cors, cognitoAuthorizer } from '../../../../serverless/parameters';
 
 export default {
   handler: `${handlerPath(__dirname)}/handler.main`,
@@ -10,7 +10,15 @@ export default {
         path: '/schedules',
         private: true,
         cors,
-        // authorizer,
+        // authorizer, // API Key auth (original)
+      },
+    },
+    {
+      http: {
+        method: 'post',
+        path: '/api/schedules',
+        cors,
+        authorizer: cognitoAuthorizer, // Cognito auth (for frontend)
       },
     },
   ],

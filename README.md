@@ -1,8 +1,119 @@
-# Serverless - AWS Node.js Typescript
+# Switching Service
 
-This project has been generated using the `aws-nodejs-typescript` template from the [Serverless framework](https://www.serverless.com/).
+Servicio serverless para gestionar el encendido y apagado de recursos AWS (RDS, EC2, ECS) con programaciones automáticas mediante cron jobs.
 
-For detailed instructions, please refer to the [documentation](https://www.serverless.com/framework/docs/providers/aws/).
+## Características
+
+- ✅ Gestión de recursos AWS (RDS, EC2, ECS)
+- ✅ Programaciones automáticas con expresiones cron
+- ✅ Autenticación dual: API Key y Cognito
+- ✅ Frontend Vue 3 + Quasar con autenticación Cognito
+- ✅ Despliegue en Amplify
+
+## Estructura del Proyecto
+
+```
+.
+├── src/                    # Código fuente del backend
+│   ├── functions/         # Funciones Lambda
+│   ├── libs/              # Librerías compartidas
+│   └── types.ts           # Tipos TypeScript
+├── frontend/              # Frontend Vue + Quasar
+│   ├── src/
+│   │   ├── pages/        # Páginas de la aplicación
+│   │   ├── services/     # Servicios API
+│   │   └── router/       # Configuración de rutas
+│   └── amplify.yml        # Configuración de Amplify
+└── serverless.ts          # Configuración de Serverless Framework
+```
+
+## Configuración Inicial
+
+### Backend
+
+1. Instalar dependencias:
+```bash
+npm install
+```
+
+2. Configurar variables de entorno:
+```bash
+cp .env.example .env
+# Editar .env con tus valores
+```
+
+3. Desplegar:
+```bash
+npm run deploy:dev  # o deploy:qa, deploy:prod
+```
+
+### Frontend
+
+1. Instalar dependencias:
+```bash
+cd frontend
+npm install
+```
+
+2. Configurar variables de entorno:
+```bash
+cp .env.example .env
+# Editar .env con tus valores de Cognito y API
+```
+
+3. Desarrollo local:
+```bash
+npm run dev
+```
+
+4. Build para producción:
+```bash
+npm run build
+```
+
+## Autenticación
+
+El servicio soporta dos métodos de autenticación:
+
+1. **API Key** (rutas originales): Para integraciones programáticas
+   - Rutas: `/resources-states`, `/schedules`, etc.
+   - Header: `X-Api-Key: <api-key>`
+
+2. **Cognito** (rutas con `/api/`): Para el frontend
+   - Rutas: `/api/resources-states`, `/api/schedules`, etc.
+   - Header: `Authorization: Bearer <cognito-token>`
+
+## Documentación Adicional
+
+- [Configuración de Amplify](./AMPLIFY_SETUP.md): Guía para desplegar el frontend en Amplify
+- [Frontend README](./frontend/README.md): Documentación específica del frontend
+
+## Endpoints Disponibles
+
+### Recursos
+- `GET /api/resources-states` - Listar todos los recursos
+- `GET /api/resources-states/{id}` - Obtener un recurso
+- `POST /api/resources-states` - Crear un recurso
+- `PUT /api/resources-states/{id}` - Actualizar un recurso
+- `DELETE /api/resources-states/{id}` - Eliminar un recurso
+- `POST /api/resources-states/{id}/start` - Iniciar un recurso
+- `POST /api/resources-states/{id}/stop` - Detener un recurso
+
+### Programaciones
+- `GET /api/schedules` - Listar todas las programaciones
+- `GET /api/schedules/{id}` - Obtener una programación
+- `POST /api/schedules` - Crear una programación
+- `PUT /api/schedules/{id}` - Actualizar una programación
+- `DELETE /api/schedules/{id}` - Eliminar una programación
+
+## Requisitos
+
+- Node.js >= 14.15.0
+- AWS CLI configurado
+- Cuenta de AWS con permisos adecuados
+- User Pool de Cognito (para el frontend)
+
+Para más detalles sobre el despliegue, consulta la [documentación de Serverless Framework](https://www.serverless.com/framework/docs/providers/aws/).
 
 ## Installation/deployment instructions
 

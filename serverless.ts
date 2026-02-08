@@ -97,6 +97,8 @@ const serverlessConfiguration: AWS = {
       RESOURCES_STATES_TABLE: resourcesStatesTableName,
       SCHEDULES_TABLE: schedulesTableName,
       AWS_ACCOUNT: '${env:AWS_ACCOUNT}',
+      AWS_REGION: region,
+      COGNITO_USER_POOL_ID: '${env:COGNITO_USER_POOL_ID}',
       SCHEDULER_ROLE_ARN: {
         'Fn::GetAtt': ['SchedulerRole', 'Arn']
       },
@@ -210,6 +212,32 @@ const serverlessConfiguration: AWS = {
               },
             },
           ],
+        },
+      },
+      CognitoAuthorizer: {
+        Type: 'AWS::ApiGateway::Authorizer',
+        Properties: {
+          Name: `${serviceName}-cognito-authorizer-${stage}`,
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi',
+          },
+          Type: 'COGNITO_USER_POOLS',
+          ProviderARNs: [
+            {
+              'Fn::Join': [
+                '',
+                [
+                  'arn:aws:cognito-idp:',
+                  region,
+                  ':',
+                  { Ref: 'AWS::AccountId' },
+                  ':userpool/',
+                  '${env:COGNITO_USER_POOL_ID}',
+                ],
+              ],
+            },
+          ],
+          IdentitySource: 'method.request.header.Authorization',
         },
       },
     }

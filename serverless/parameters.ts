@@ -42,3 +42,10 @@ export const authorizer = {
   identitySource: 'method.request.header.Authorization',
   type: 'token',
 }
+
+export const cognitoAuthorizer = {
+  type: 'COGNITO_USER_POOLS',
+  authorizerId: {
+    Ref: 'CognitoAuthorizer',
+  },
+}
