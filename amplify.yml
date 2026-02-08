@@ -42,6 +42,8 @@ frontend:
           fi
         - pwd
         - npm run build
+        - echo Build completed, checking dist directory
+        - ls -la dist/spa 2>/dev/null || ls -la dist 2>/dev/null || echo Dist not found
   artifacts:
     baseDirectory: frontend/dist/spa
     files:
