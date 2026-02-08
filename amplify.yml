@@ -3,12 +3,55 @@ frontend:
   phases:
     preBuild:
       commands:
-        - cd frontend
+        - echo "=== PreBuild Phase ==="
+        - echo "Current directory: $(pwd)"
+        - echo "Listing root directory:"
+        - ls -la
+        - |
+          # Detectar si estamos en la raíz o ya en frontend
+          if [ -f "package.json" ] && [ -f "quasar.config.js" ]; then
+            echo "Already in frontend directory (Base directory is set to frontend)"
+            WORK_DIR="."
+          elif [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+            echo "Found frontend directory, will work from root"
+            WORK_DIR="frontend"
+          else
+            echo "ERROR: frontend directory or package.json not found!"
+            echo "Available files and directories:"
+            find . -maxdepth 2 -type f -name "package.json" 2>/dev/null || true
+            find . -maxdepth 1 -type d | head -20
+            exit 1
+          fi
+        - |
+          if [ "$WORK_DIR" != "." ]; then
+            echo "Installing dependencies in $WORK_DIR..."
+            cd "$WORK_DIR"
+          else
+            echo "Installing dependencies in current directory..."
+          fi
+        - echo "Working directory: $(pwd)"
+        - echo "Verifying package.json exists:"
+        - test -f package.json && echo "✓ package.json found" || (echo "✗ package.json NOT found!" && exit 1)
         - npm ci
     build:
       commands:
-        - cd frontend
+        - echo "=== Build Phase ==="
+        - |
+          # Asegurarse de estar en el directorio correcto
+          if [ -f "package.json" ] && [ -f "quasar.config.js" ]; then
+            echo "Already in frontend directory"
+          elif [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+            echo "Entering frontend directory..."
+            cd frontend
+          else
+            echo "ERROR: Cannot find frontend directory or package.json"
+            exit 1
+          fi
+        - echo "Build directory: $(pwd)"
+        - echo "Building frontend..."
         - npm run build
+        - echo "Build completed. Checking dist directory:"
+        - ls -la dist/spa 2>/dev/null || ls -la dist 2>/dev/null || echo "Dist directory not found"
   artifacts:
     baseDirectory: frontend/dist/spa
     files:
