@@ -3,19 +3,18 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo PreBuild Phase
         - pwd
         - ls -la
         - |
-          if [ -f "package.json" ] && [ -f "quasar.config.js" ]; then
+          if [ -f package.json ] && [ -f quasar.config.js ]; then
             echo Already in frontend directory
-            WORK_DIR="."
-          elif [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+            WORK_DIR=.
+          elif [ -d frontend ] && [ -f frontend/package.json ]; then
             echo Found frontend directory
-            WORK_DIR="frontend"
+            WORK_DIR=frontend
           else
             echo ERROR frontend directory or package.json not found
-            find . -maxdepth 2 -type f -name "package.json" 2>/dev/null || true
+            find . -maxdepth 2 -type f -name package.json 2>/dev/null || true
             find . -maxdepth 1 -type d | head -20
             exit 1
           fi
@@ -27,15 +26,14 @@ frontend:
             echo Installing dependencies in current directory
           fi
         - pwd
-        - test -f package.json && echo package.json found || (echo package.json NOT found && exit 1)
+        - test -f package.json || exit 1
         - npm ci
     build:
       commands:
-        - echo Build Phase
         - |
-          if [ -f "package.json" ] && [ -f "quasar.config.js" ]; then
+          if [ -f package.json ] && [ -f quasar.config.js ]; then
             echo Already in frontend directory
-          elif [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+          elif [ -d frontend ] && [ -f frontend/package.json ]; then
             echo Entering frontend directory
             cd frontend
           else
@@ -43,10 +41,7 @@ frontend:
             exit 1
           fi
         - pwd
-        - echo Building frontend
         - npm run build
-        - echo Build completed
-        - ls -la dist/spa 2>/dev/null || ls -la dist 2>/dev/null || echo Dist directory not found
   artifacts:
     baseDirectory: frontend/dist/spa
     files:
