@@ -4,45 +4,41 @@ Este documento describe cómo configurar el frontend en AWS Amplify con autentic
 
 ## Prerrequisitos
 
-1. Tener un User Pool de Cognito creado
-2. Tener un App Client de Cognito configurado
-3. Tener la API desplegada y funcionando
+1. Tener la API desplegada y funcionando (el User Pool y App Client se crean automáticamente)
 
 ## Pasos de Configuración
 
-### 1. Crear el User Pool de Cognito (si no existe)
+### 1. Desplegar el Backend
+
+El User Pool de Cognito y el App Client se crean automáticamente cuando despliegas el servicio. Solo necesitas tener configurado `AWS_ACCOUNT`:
 
 ```bash
-aws cognito-idp create-user-pool \
-  --pool-name switching-service-users \
-  --auto-verified-attributes email \
-  --policies PasswordPolicy={MinimumLength=8,RequireUppercase=true,RequireLowercase=true,RequireNumbers=true,RequireSymbols=false}
-```
-
-Anota el `Id` del User Pool creado.
-
-### 2. Crear el App Client
-
-```bash
-aws cognito-idp create-user-pool-client \
-  --user-pool-id <USER_POOL_ID> \
-  --client-name switching-service-client \
-  --generate-secret \
-  --explicit-auth-flows ALLOW_USER_PASSWORD_AUTH ALLOW_REFRESH_TOKEN_AUTH
-```
-
-Anota el `ClientId` del App Client creado.
-
-### 3. Configurar el Authorizer en API Gateway
-
-El authorizer de Cognito se crea automáticamente cuando despliegas el servicio con Serverless Framework. Asegúrate de tener la variable de entorno `COGNITO_USER_POOL_ID` configurada antes de desplegar:
-
-```bash
-export COGNITO_USER_POOL_ID=<USER_POOL_ID>
+export AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 npm run deploy:dev  # o deploy:qa, deploy:prod según el stage
 ```
 
-### 4. Configurar Amplify
+### 2. Obtener los IDs de Cognito
+
+Después del despliegue, puedes obtener los IDs de dos formas:
+
+**Opción A: Desde los Outputs de CloudFormation**
+```bash
+aws cloudformation describe-stacks \
+  --stack-name switching-service-<stage> \
+  --query 'Stacks[0].Outputs[?OutputKey==`CognitoUserPoolId` || OutputKey==`CognitoUserPoolClientId` || OutputKey==`ApiGatewayRestApiUrl`].{Key:OutputKey,Value:OutputValue}' \
+  --output table
+```
+
+**Opción B: Desde la consola de AWS**
+1. Ve a CloudFormation en la consola de AWS
+2. Selecciona el stack `switching-service-<stage>`
+3. Ve a la pestaña "Outputs"
+4. Copia los valores de:
+   - `CognitoUserPoolId`
+   - `CognitoUserPoolClientId`
+   - `ApiGatewayRestApiUrl`
+
+### 3. Configurar Amplify
 
 1. Conecta tu repositorio de GitHub a Amplify
 2. En la configuración de la app de Amplify, ve a "Environment variables"
@@ -60,14 +56,14 @@ VITE_API_ENDPOINT=https://<api-id>.execute-api.<region>.amazonaws.com/<stage>
 - `<CLIENT_ID>` con el Client ID de Cognito
 - `<api-id>`, `<region>`, `<stage>` con los valores de tu API Gateway
 
-### 5. Configurar el build en Amplify
+### 4. Configurar el build en Amplify
 
 Amplify detectará automáticamente el archivo `amplify.yml` en la carpeta `frontend/`. Asegúrate de que el build path esté configurado correctamente:
 
 - **Base directory:** `frontend` (si el repositorio tiene la estructura raíz)
 - **Build settings:** Se usarán las del `amplify.yml`
 
-### 6. Configurar CORS en API Gateway
+### 5. Configurar CORS en API Gateway
 
 Asegúrate de que el CORS en la API permita el origen de Amplify. El CORS ya está configurado para permitir todos los orígenes (`*`), pero si quieres restringirlo:
 
@@ -76,7 +72,7 @@ Asegúrate de que el CORS en la API permita el origen de Amplify. El CORS ya est
 3. Ve a "Actions" > "Enable CORS"
 4. Configura los orígenes permitidos
 
-### 7. Crear un usuario de prueba
+### 6. Crear un usuario de prueba
 
 ```bash
 aws cognito-idp admin-create-user \
@@ -100,8 +96,9 @@ aws cognito-idp admin-set-user-password \
 ## Variables de Entorno Requeridas
 
 ### Backend (Serverless)
-- `COGNITO_USER_POOL_ID`: ID del User Pool de Cognito
-- `AWS_ACCOUNT`: ID de la cuenta de AWS
+- `AWS_ACCOUNT`: ID de la cuenta de AWS (se obtiene automáticamente o se puede configurar manualmente)
+
+**Nota:** El `COGNITO_USER_POOL_ID` y `COGNITO_USER_POOL_CLIENT_ID` se crean automáticamente y están disponibles como variables de entorno en las funciones Lambda.
 
 ### Frontend (Amplify)
 - `VITE_AWS_REGION`: Región de AWS (default: us-east-1)
@@ -137,5 +134,41 @@ El frontend usa las rutas con prefijo `/api/` que están protegidas con el autho
 - Verifica que el origen de Amplify esté permitido
 
 ### Error: "Authorizer not found"
-- Asegúrate de haber desplegado el servicio con la variable `COGNITO_USER_POOL_ID` configurada
+- Asegúrate de haber desplegado el servicio correctamente
 - Verifica que el authorizer se haya creado correctamente en API Gateway
+- Verifica que el User Pool se haya creado correctamente (debería aparecer en la consola de Cognito)
+
+### Obtener los valores después del despliegue
+
+Puedes usar este script para obtener todos los valores necesarios:
+
+```bash
+#!/bin/bash
+STAGE=dev  # o qa, prod
+
+STACK_NAME="switching-service-${STAGE}"
+
+echo "Obteniendo valores del stack ${STACK_NAME}..."
+
+USER_POOL_ID=$(aws cloudformation describe-stacks \
+  --stack-name ${STACK_NAME} \
+  --query 'Stacks[0].Outputs[?OutputKey==`CognitoUserPoolId`].OutputValue' \
+  --output text)
+
+CLIENT_ID=$(aws cloudformation describe-stacks \
+  --stack-name ${STACK_NAME} \
+  --query 'Stacks[0].Outputs[?OutputKey==`CognitoUserPoolClientId`].OutputValue' \
+  --output text)
+
+API_URL=$(aws cloudformation describe-stacks \
+  --stack-name ${STACK_NAME} \
+  --query 'Stacks[0].Outputs[?OutputKey==`ApiGatewayRestApiUrl`].OutputValue' \
+  --output text)
+
+echo ""
+echo "=== Valores para Amplify ==="
+echo "VITE_COGNITO_USER_POOL_ID=${USER_POOL_ID}"
+echo "VITE_COGNITO_USER_POOL_CLIENT_ID=${CLIENT_ID}"
+echo "VITE_API_ENDPOINT=${API_URL}"
+echo "VITE_AWS_REGION=us-east-1"
+```

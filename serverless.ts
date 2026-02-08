@@ -97,8 +97,12 @@ const serverlessConfiguration: AWS = {
       RESOURCES_STATES_TABLE: resourcesStatesTableName,
       SCHEDULES_TABLE: schedulesTableName,
       AWS_ACCOUNT: '${env:AWS_ACCOUNT}',
-      AWS_REGION: region,
-      COGNITO_USER_POOL_ID: '${env:COGNITO_USER_POOL_ID}',
+      COGNITO_USER_POOL_ID: {
+        Ref: 'CognitoUserPool',
+      },
+      COGNITO_USER_POOL_CLIENT_ID: {
+        Ref: 'CognitoUserPoolClient',
+      },
       SCHEDULER_ROLE_ARN: {
         'Fn::GetAtt': ['SchedulerRole', 'Arn']
       },
@@ -214,6 +218,45 @@ const serverlessConfiguration: AWS = {
           ],
         },
       },
+      CognitoUserPool: {
+        Type: 'AWS::Cognito::UserPool',
+        Properties: {
+          UserPoolName: `${serviceName}-user-pool-${stage}`,
+          AutoVerifiedAttributes: ['email'],
+          UsernameAttributes: ['email'],
+          Policies: {
+            PasswordPolicy: {
+              MinimumLength: 8,
+              RequireUppercase: true,
+              RequireLowercase: true,
+              RequireNumbers: true,
+              RequireSymbols: false,
+            },
+          },
+          Schema: [
+            {
+              Name: 'email',
+              Required: true,
+              Mutable: true,
+            },
+          ],
+        },
+      },
+      CognitoUserPoolClient: {
+        Type: 'AWS::Cognito::UserPoolClient',
+        Properties: {
+          ClientName: `${serviceName}-client-${stage}`,
+          UserPoolId: {
+            Ref: 'CognitoUserPool',
+          },
+          GenerateSecret: false,
+          ExplicitAuthFlows: [
+            'ALLOW_USER_PASSWORD_AUTH',
+            'ALLOW_REFRESH_TOKEN_AUTH',
+            'ALLOW_USER_SRP_AUTH',
+          ],
+        },
+      },
       CognitoAuthorizer: {
         Type: 'AWS::ApiGateway::Authorizer',
         Properties: {
@@ -224,23 +267,61 @@ const serverlessConfiguration: AWS = {
           Type: 'COGNITO_USER_POOLS',
           ProviderARNs: [
             {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:aws:cognito-idp:',
-                  region,
-                  ':',
-                  { Ref: 'AWS::AccountId' },
-                  ':userpool/',
-                  '${env:COGNITO_USER_POOL_ID}',
-                ],
-              ],
+              'Fn::GetAtt': ['CognitoUserPool', 'Arn'],
             },
           ],
           IdentitySource: 'method.request.header.Authorization',
         },
       },
-    }
+    },
+    Outputs: {
+      CognitoUserPoolId: {
+        Description: 'Cognito User Pool ID',
+        Value: {
+          Ref: 'CognitoUserPool',
+        },
+        Export: {
+          Name: `${serviceName}-${stage}-cognito-user-pool-id`,
+        },
+      },
+      CognitoUserPoolClientId: {
+        Description: 'Cognito User Pool Client ID',
+        Value: {
+          Ref: 'CognitoUserPoolClient',
+        },
+        Export: {
+          Name: `${serviceName}-${stage}-cognito-client-id`,
+        },
+      },
+      ApiGatewayRestApiId: {
+        Description: 'API Gateway REST API ID',
+        Value: {
+          Ref: 'ApiGatewayRestApi',
+        },
+        Export: {
+          Name: `${serviceName}-${stage}-api-id`,
+        },
+      },
+      ApiGatewayRestApiUrl: {
+        Description: 'API Gateway REST API URL',
+        Value: {
+          'Fn::Join': [
+            '',
+            [
+              'https://',
+              { Ref: 'ApiGatewayRestApi' },
+              '.execute-api.',
+              region,
+              '.amazonaws.com/',
+              stage,
+            ],
+          ],
+        },
+        Export: {
+          Name: `${serviceName}-${stage}-api-url`,
+        },
+      },
+    },
   },
   functions,
   package: { individually: true },

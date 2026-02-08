@@ -36,10 +36,11 @@ Servicio serverless para gestionar el encendido y apagado de recursos AWS (RDS, 
 npm install
 ```
 
-2. Configurar variables de entorno:
+2. Configurar variables de entorno (solo AWS_ACCOUNT es necesario):
 ```bash
 cp .env.example .env
-# Editar .env con tus valores
+# Editar .env con AWS_ACCOUNT (o se obtiene automáticamente)
+# El User Pool de Cognito se crea automáticamente al desplegar
 ```
 
 3. Desplegar:
