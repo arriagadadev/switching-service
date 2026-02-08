@@ -304,6 +304,8 @@
               :options="filteredEC2Options"
               option-label="label"
               option-value="value"
+              emit-value
+              map-options
               label="Instancia EC2 *"
               :rules="[(val) => !!val || 'Selecciona una instancia EC2']"
               outlined
@@ -343,6 +345,8 @@
               :options="filteredRDSOptions"
               option-label="label"
               option-value="value"
+              emit-value
+              map-options
               label="Instancia RDS *"
               :rules="[(val) => !!val || 'Selecciona una instancia RDS']"
               outlined
@@ -698,8 +702,16 @@ const loadResources = async () => {
 const saveResource = async () => {
   saving.value = true;
   try {
+    // Asegurar que resourceIdentifier sea siempre un string
+    const formData = {
+      ...resourceForm.value,
+      resourceIdentifier: typeof resourceForm.value.resourceIdentifier === 'string'
+        ? resourceForm.value.resourceIdentifier
+        : String(resourceForm.value.resourceIdentifier || ''),
+    };
+
     if (editingResource.value) {
-      await resourcesService.update(editingResource.value.id, resourceForm.value);
+      await resourcesService.update(editingResource.value.id, formData);
       $q.notify({
         type: 'positive',
         message: 'Recurso actualizado correctamente',
@@ -707,7 +719,7 @@ const saveResource = async () => {
         icon: 'check_circle',
       });
     } else {
-      await resourcesService.create(resourceForm.value);
+      await resourcesService.create(formData);
       $q.notify({
         type: 'positive',
         message: 'Recurso creado correctamente',

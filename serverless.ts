@@ -53,6 +53,7 @@ const serverlessConfiguration: AWS = {
           'rds:StartDBInstance',
           'rds:StopDBInstance',
           'rds:DescribeDBInstances',
+          'rds:ListTagsForResource',
         ],
         Resource: '*',
       },
@@ -60,6 +61,8 @@ const serverlessConfiguration: AWS = {
         Effect: 'Allow',
         Action: [
           'ec2:DescribeInstances',
+          'ec2:DescribeInstanceStatus',
+          'ec2:DescribeTags',
           'ec2:StartInstances',
           'ec2:StopInstances',
         ],
