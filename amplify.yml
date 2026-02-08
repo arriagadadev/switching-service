@@ -41,6 +41,11 @@ frontend:
             exit 1
           fi
         - pwd
+        - echo Checking environment variables
+        - echo VITE_COGNITO_USER_POOL_ID is set: $([ -n "$VITE_COGNITO_USER_POOL_ID" ] && echo yes || echo no)
+        - echo VITE_COGNITO_USER_POOL_CLIENT_ID is set: $([ -n "$VITE_COGNITO_USER_POOL_CLIENT_ID" ] && echo yes || echo no)
+        - echo VITE_AWS_REGION is set: $([ -n "$VITE_AWS_REGION" ] && echo yes || echo no)
+        - echo VITE_API_ENDPOINT is set: $([ -n "$VITE_API_ENDPOINT" ] && echo yes || echo no)
         - npm run build
         - echo Build completed, checking dist directory
         - ls -la dist/spa 2>/dev/null || ls -la dist 2>/dev/null || echo Dist not found

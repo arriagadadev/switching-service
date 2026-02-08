@@ -41,8 +41,8 @@ aws cloudformation describe-stacks \
 ### 3. Configurar Amplify
 
 1. Conecta tu repositorio de GitHub a Amplify
-2. En la configuración de la app de Amplify, ve a "Environment variables"
-3. Agrega las siguientes variables de entorno:
+2. En la configuración de la app de Amplify, ve a **"Environment variables"** (Variables de entorno)
+3. Agrega las siguientes variables de entorno (IMPORTANTE: deben tener el prefijo `VITE_`):
 
 ```
 VITE_AWS_REGION=us-east-1
@@ -55,6 +55,12 @@ VITE_API_ENDPOINT=https://<api-id>.execute-api.<region>.amazonaws.com/<stage>
 - `<USER_POOL_ID>` con el ID del User Pool de Cognito
 - `<CLIENT_ID>` con el Client ID de Cognito
 - `<api-id>`, `<region>`, `<stage>` con los valores de tu API Gateway
+
+**IMPORTANTE:** 
+- Las variables de entorno en Amplify se pasan automáticamente al proceso de build
+- Vite solo expone variables que comienzan con `VITE_` al código del cliente
+- Asegúrate de que todas las variables tengan el prefijo `VITE_`
+- Después de agregar las variables, necesitas hacer un nuevo build para que se apliquen
 
 ### 4. Configurar el build en Amplify
 
