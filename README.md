@@ -23,7 +23,7 @@ Servicio serverless para gestionar el encendido y apagado de recursos AWS (RDS, 
 │   │   ├── pages/        # Páginas de la aplicación
 │   │   ├── services/     # Servicios API
 │   │   └── router/       # Configuración de rutas
-│   └── amplify.yml        # Configuración de Amplify
+├── amplify.yml            # Configuración de Amplify (en la raíz)
 └── serverless.ts          # Configuración de Serverless Framework
 ```
 

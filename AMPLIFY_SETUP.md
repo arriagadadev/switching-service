@@ -58,10 +58,10 @@ VITE_API_ENDPOINT=https://<api-id>.execute-api.<region>.amazonaws.com/<stage>
 
 ### 4. Configurar el build en Amplify
 
-Amplify detectará automáticamente el archivo `amplify.yml` en la carpeta `frontend/`. Asegúrate de que el build path esté configurado correctamente:
+Amplify detectará automáticamente el archivo `amplify.yml` en la raíz del repositorio. El archivo ya está configurado para trabajar con la carpeta `frontend/`, por lo que no necesitas configurar nada adicional:
 
-- **Base directory:** `frontend` (si el repositorio tiene la estructura raíz)
-- **Build settings:** Se usarán las del `amplify.yml`
+- **Base directory:** Dejar vacío (raíz del repositorio)
+- **Build settings:** Se usarán automáticamente las del `amplify.yml` en la raíz
 
 ### 5. Configurar CORS en API Gateway
 
