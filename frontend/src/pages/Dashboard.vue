@@ -1,9 +1,9 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="text-h4 q-mb-md">Dashboard</div>
+  <q-page class="q-pa-lg" style="width: 100%; max-width: 100%;">
+    <div class="text-h4 q-mb-lg">Dashboard</div>
 
     <!-- Cards de estadísticas -->
-    <div class="row q-gutter-md q-mb-md">
+    <div class="row q-gutter-md q-mb-lg" style="width: 100%; margin-left: 0; margin-right: 0;">
       <q-card class="col-12 col-sm-6 col-md-3" flat bordered>
         <q-card-section>
           <div class="row items-center no-wrap">
@@ -60,7 +60,7 @@
     </div>
 
     <!-- Gráficos y visualizaciones -->
-    <div class="row q-gutter-md q-mb-md">
+    <div class="row q-gutter-md q-mb-lg">
       <!-- Distribución por tipo -->
       <q-card class="col-12 col-md-6" flat bordered>
         <q-card-section>
@@ -150,7 +150,7 @@
     </div>
 
     <!-- Tablas de recursos y programaciones recientes -->
-    <div class="row q-gutter-md">
+    <div class="row q-gutter-md" style="width: 100%; margin-left: 0; margin-right: 0;">
       <!-- Recursos recientes -->
       <q-card class="col-12 col-md-6" flat bordered>
         <q-card-section>
