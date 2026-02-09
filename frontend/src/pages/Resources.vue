@@ -280,11 +280,20 @@ const loadResources = async () => {
 };
 
 const onTypeChange = async () => {
-  resourceForm.value.resourceIdentifier = '';
+  const previousIdentifier = resourceForm.value.resourceIdentifier || '';
+  const isEditingSameType = editingResource.value && editingResource.value.type === resourceForm.value.type;
+
   if (resourceForm.value.type === 'EC2') {
     try {
       const list = await awsResourcesService.getEC2Instances();
       ec2Options.value = list.map((i) => ({ label: i.name || i.instanceId, value: i.instanceId }));
+      if (previousIdentifier && !ec2Options.value.some((o) => o.value === previousIdentifier)) {
+        if (isEditingSameType) {
+          ec2Options.value = [{ label: `${previousIdentifier} (no encontrado)`, value: previousIdentifier }, ...ec2Options.value];
+        } else {
+          resourceForm.value.resourceIdentifier = '';
+        }
+      }
     } catch (e) {
       toast.error('Error al cargar instancias EC2');
     }
@@ -292,6 +301,13 @@ const onTypeChange = async () => {
     try {
       const list = await awsResourcesService.getRDSInstances();
       rdsOptions.value = list.map((i) => ({ label: i.name || i.dbInstanceIdentifier, value: i.dbInstanceIdentifier }));
+      if (previousIdentifier && !rdsOptions.value.some((o) => o.value === previousIdentifier)) {
+        if (isEditingSameType) {
+          rdsOptions.value = [{ label: `${previousIdentifier} (no encontrado)`, value: previousIdentifier }, ...rdsOptions.value];
+        } else {
+          resourceForm.value.resourceIdentifier = '';
+        }
+      }
     } catch (e) {
       toast.error('Error al cargar instancias RDS');
     }
@@ -299,9 +315,18 @@ const onTypeChange = async () => {
     try {
       const list = await awsResourcesService.getECSInstances();
       ecsOptions.value = list.map((i) => ({ label: i.name, value: i.identifier }));
+      if (previousIdentifier && !ecsOptions.value.some((o) => o.value === previousIdentifier)) {
+        if (isEditingSameType) {
+          ecsOptions.value = [{ label: `${previousIdentifier} (no encontrado)`, value: previousIdentifier }, ...ecsOptions.value];
+        } else {
+          resourceForm.value.resourceIdentifier = '';
+        }
+      }
     } catch (e) {
       toast.error('Error al cargar servicios ECS');
     }
+  } else {
+    resourceForm.value.resourceIdentifier = '';
   }
 };
 
