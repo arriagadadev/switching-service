@@ -174,6 +174,22 @@
             <a v-if="selectedResource.state === 1" :href="selectedResource.serviceURL" target="_blank" rel="noopener noreferrer" class="resource-name-link">{{ selectedResource.serviceURL }}</a>
             <span v-else class="mono">{{ selectedResource.serviceURL }}</span>
           </dd></div>
+          <div v-if="selectedResource.type === 'EC2' && quickCommandsForResource.length">
+            <dt>Comandos rápidos</dt>
+            <dd>
+              <div class="quick-commands">
+                <button
+                  v-for="cmd in quickCommandsForResource"
+                  :key="cmd.id"
+                  class="btn btn-small"
+                  :disabled="selectedResource.state === 0 || quickExecLoading[cmd.id]"
+                  @click="runQuickCommand(cmd)"
+                >
+                  {{ quickExecLoading[cmd.id] ? '...' : cmd.name }}
+                </button>
+              </div>
+            </dd>
+          </div>
         </dl>
         <div class="modal-actions">
           <template v-if="selectedResource.serviceURL && selectedResource.state === 1">
@@ -195,10 +211,11 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { resourcesService } from '../services/resources';
 import { awsResourcesService } from '../services/awsResources';
+import { commandsService } from '../services/commands';
 import { useToast } from '../composables/useToast';
 import Modal from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
-import type { ResourceStateResource, StoreResourceStateBody, ResourceType } from '../types';
+import type { ResourceStateResource, StoreResourceStateBody, ResourceType, Command } from '../types';
 
 const toast = useToast();
 const loading = ref(false);
@@ -216,6 +233,7 @@ const editingResource = ref<ResourceStateResource | null>(null);
 const selectedResource = ref<ResourceStateResource | null>(null);
 const actionLoading = ref<Record<string, boolean>>({});
 const ec2Options = ref<{ label: string; value: string }[]>([]);
+const commandsList = ref<Command[]>([]);
 const rdsOptions = ref<{ label: string; value: string }[]>([]);
 const ecsOptions = ref<{ label: string; value: string }[]>([]);
 
@@ -233,6 +251,34 @@ const confirmOk = ref('OK');
 const confirmOkClass = ref('');
 let confirmResolve: (() => void) | null = null;
 let confirmResourceId: string | null = null;
+
+const quickCommandsForResource = computed(() => {
+  if (!selectedResource.value || selectedResource.value.type !== 'EC2') return [];
+  return commandsList.value.filter((c) => (c.linkedResourceIds || []).includes(selectedResource.value!.id));
+});
+
+const quickExecLoading = ref<Record<string, boolean>>({});
+
+const loadCommands = async () => {
+  try {
+    commandsList.value = await commandsService.getAll();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const runQuickCommand = async (cmd: Command) => {
+  if (!selectedResource.value) return;
+  quickExecLoading.value[cmd.id] = true;
+  try {
+    await commandsService.execute(cmd.id, [selectedResource.value.id]);
+    toast.success(`Comando "${cmd.name}" ejecutado`);
+  } catch (e: any) {
+    toast.error(e.response?.data?.message || 'Error al ejecutar');
+  } finally {
+    quickExecLoading.value[cmd.id] = false;
+  }
+};
 
 const chipClassForType = (type: string) => {
   if (type === 'RDS') return 'info';
@@ -360,6 +406,7 @@ const saveResource = async () => {
 const viewResource = (r: ResourceStateResource) => {
   selectedResource.value = r;
   showDetailModal.value = true;
+  if (commandsList.value.length === 0) loadCommands();
 };
 
 const editResource = (r: ResourceStateResource) => {
@@ -439,6 +486,7 @@ onMounted(() => {
   const saved = localStorage.getItem('resourcesViewMode');
   if (saved === 'table' || saved === 'cards') viewMode.value = saved;
   loadResources();
+  loadCommands();
 });
 </script>
 
@@ -481,6 +529,8 @@ onMounted(() => {
 .detail-list dt { color: var(--text-tertiary); font-size: 0.875rem; }
 .detail-list dd { margin: 0; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.quick-commands { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-small { padding: 6px 12px; font-size: 0.875rem; }
 .btn-success { background: var(--success); color: white; }
 .btn-danger { background: var(--error); color: white; }
 .form .field { margin-bottom: 16px; }

@@ -20,6 +20,16 @@ import listEC2Instances from './awsResources/listEC2Instances';
 import listRDSInstances from './awsResources/listRDSInstances';
 import listECSInstances from './awsResources/listECSInstances';
 
+import getCommands from './commands/getCommands';
+import getCommandById from './commands/getCommandById';
+import storeCommand from './commands/storeCommand';
+import updateCommand from './commands/updateCommand';
+import deleteCommandById from './commands/deleteCommandById';
+import executeCommand from './commands/executeCommand';
+import getCommandExecutions from './commands/getCommandExecutions';
+import getCommandExecutionById from './commands/getCommandExecutionById';
+import syncCommandExecution from './commands/syncCommandExecution';
+
 export default {
     getResourcesStates,
     getResourceStateById,
@@ -39,4 +49,13 @@ export default {
     listEC2Instances,
     listRDSInstances,
     listECSInstances,
+    getCommands,
+    getCommandById,
+    storeCommand,
+    updateCommand,
+    deleteCommandById,
+    executeCommand,
+    getCommandExecutions,
+    getCommandExecutionById,
+    syncCommandExecution,
 }

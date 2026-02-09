@@ -59,3 +59,44 @@ export type UpdateScheduleBody = {
   desiredState: State;
   resources: Resource[];
 };
+
+export type Command = {
+  id: string;
+  name: string;
+  command: string;
+  description?: string;
+  linkedResourceIds: string[];
+  timestamp: number;
+};
+
+export type StoreCommandBody = {
+  name: string;
+  command: string;
+  description?: string;
+  linkedResourceIds?: string[];
+};
+
+export type UpdateCommandBody = StoreCommandBody;
+
+export type CommandExecutionStatus = 'pending' | 'running' | 'success' | 'failed' | 'partial';
+
+export type CommandExecutionInvocation = {
+  resourceId: string;
+  instanceId: string;
+  resourceName: string;
+  status: string;
+  output?: string;
+  error?: string;
+};
+
+export type CommandExecution = {
+  id: string;
+  commandId: string;
+  commandName: string;
+  resourceIds: string[];
+  status: CommandExecutionStatus;
+  ssmCommandId?: string;
+  invocations: CommandExecutionInvocation[];
+  timestamp: number;
+  completedAt?: number;
+};

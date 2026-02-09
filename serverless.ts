@@ -7,6 +7,8 @@ import functions from './src/functions';
 const serviceName = 'switching-service';
 const resourcesStatesTableName = `${serviceName}-resources-states-${stage}`;
 const schedulesTableName = `${serviceName}-schedules-${stage}`;
+const commandsTableName = `${serviceName}-commands-${stage}`;
+const commandExecutionsTableName = `${serviceName}-command-executions-${stage}`;
 
 const serverlessConfiguration: AWS = {
   service: serviceName,
@@ -45,6 +47,8 @@ const serverlessConfiguration: AWS = {
           `arn:aws:dynamodb:${region}:*:table/${resourcesStatesTableName}/index/*`,
           `arn:aws:dynamodb:${region}:*:table/${schedulesTableName}`,
           `arn:aws:dynamodb:${region}:*:table/${schedulesTableName}/index/*`,
+          `arn:aws:dynamodb:${region}:*:table/${commandsTableName}`,
+          `arn:aws:dynamodb:${region}:*:table/${commandExecutionsTableName}`,
         ],
       },
       {
@@ -78,6 +82,16 @@ const serverlessConfiguration: AWS = {
       {
         Effect: 'Allow',
         Action: [
+          'ssm:SendCommand',
+          'ssm:GetCommandInvocation',
+          'ssm:ListCommandInvocations',
+          'ssm:ListCommands',
+        ],
+        Resource: '*',
+      },
+      {
+        Effect: 'Allow',
+        Action: [
           'scheduler:*',
         ],
         Resource: '*',
@@ -99,6 +113,8 @@ const serverlessConfiguration: AWS = {
       STAGE: stage,
       RESOURCES_STATES_TABLE: resourcesStatesTableName,
       SCHEDULES_TABLE: schedulesTableName,
+      COMMANDS_TABLE: commandsTableName,
+      COMMAND_EXECUTIONS_TABLE: commandExecutionsTableName,
       AWS_ACCOUNT: '${env:AWS_ACCOUNT}',
       COGNITO_USER_POOL_ID: {
         Ref: 'CognitoUserPool',
@@ -146,6 +162,32 @@ const serverlessConfiguration: AWS = {
             StreamViewType: 'NEW_AND_OLD_IMAGES',
           },
           BillingMode: "PAY_PER_REQUEST"
+        },
+      },
+      CommandsTable: {
+        Type: 'AWS::DynamoDB::Table',
+        Properties: {
+          TableName: commandsTableName,
+          AttributeDefinitions: [
+            { AttributeName: 'id', AttributeType: 'S' },
+          ],
+          KeySchema: [
+            { AttributeName: 'id', KeyType: 'HASH' },
+          ],
+          BillingMode: 'PAY_PER_REQUEST',
+        },
+      },
+      CommandExecutionsTable: {
+        Type: 'AWS::DynamoDB::Table',
+        Properties: {
+          TableName: commandExecutionsTableName,
+          AttributeDefinitions: [
+            { AttributeName: 'id', AttributeType: 'S' },
+          ],
+          KeySchema: [
+            { AttributeName: 'id', KeyType: 'HASH' },
+          ],
+          BillingMode: 'PAY_PER_REQUEST',
         },
       },
       SchedulesTable: {

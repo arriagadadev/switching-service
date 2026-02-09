@@ -119,3 +119,51 @@ export type ScheduleResource = {
     resources: Resource[];
     timestamp: number;
 }
+
+// SSM Commands feature for EC2
+export type Command = {
+    id: string;
+    name: string;
+    command: string;
+    description?: string;
+    linkedResourceIds: string[]; // resource state IDs for quick execution
+    timestamp: number;
+}
+
+export type CommandInput = {
+    name: string;
+    command: string;
+    description?: string;
+    linkedResourceIds?: string[];
+}
+
+export type StoreCommandBody = CommandInput;
+
+export type UpdateCommandBody = CommandInput;
+
+export type CommandExecutionStatus = 'pending' | 'running' | 'success' | 'failed' | 'partial';
+
+export type CommandExecutionInvocation = {
+    resourceId: string;
+    instanceId: string;
+    resourceName: string;
+    status: 'Pending' | 'InProgress' | 'Success' | 'Failed' | 'Cancelled' | 'TimedOut';
+    output?: string;
+    error?: string;
+}
+
+export type CommandExecution = {
+    id: string;
+    commandId: string;
+    commandName: string;
+    resourceIds: string[];
+    status: CommandExecutionStatus;
+    ssmCommandId?: string;
+    invocations: CommandExecutionInvocation[];
+    timestamp: number;
+    completedAt?: number;
+}
+
+export type ExecuteCommandBody = {
+    resourceIds: string[];
+}

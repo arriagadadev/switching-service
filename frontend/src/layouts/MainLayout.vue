@@ -25,6 +25,10 @@
           <span class="material-symbols-outlined">storage</span>
           <span v-if="!miniState" class="nav-text">Recursos</span>
         </router-link>
+        <router-link to="/commands" class="nav-item" exact-active-class="active" :title="miniState ? 'Comandos SSM' : undefined">
+          <span class="material-symbols-outlined">terminal</span>
+          <span v-if="!miniState" class="nav-text">Comandos SSM</span>
+        </router-link>
         <router-link to="/schedules" class="nav-item" exact-active-class="active" :title="miniState ? 'Programaciones' : undefined">
           <span class="material-symbols-outlined">schedule</span>
           <span v-if="!miniState" class="nav-text">Programaciones</span>
