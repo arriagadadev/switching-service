@@ -29,8 +29,8 @@
               outlined
               dense
               clearable
-              autofocus
-              @focus="$event.target.select()"
+              @focus="handleSearchFocus"
+              ref="searchInputRef"
             >
               <template v-slot:prepend>
                 <q-icon name="search" />
@@ -47,6 +47,7 @@
               clearable
               emit-value
               map-options
+              :display-value="filterType ? typeFilterOptions.find(o => o.value === filterType)?.label || '' : ''"
             />
           </div>
           <div class="col-12 col-md-2">
@@ -59,6 +60,7 @@
               clearable
               emit-value
               map-options
+              :display-value="filterState !== null ? stateFilterOptions.find(o => o.value === filterState)?.label || '' : ''"
             />
           </div>
           <div class="col-12 col-md-2">
@@ -78,6 +80,7 @@
               dense
               toggle-color="primary"
               unelevated
+              spread
             />
           </div>
         </div>
@@ -546,6 +549,7 @@ const selectedResource = ref<ResourceStateResource | null>(null);
 const viewMode = ref<'table' | 'cards'>('table');
 const actionLoading = ref<Record<string, boolean>>({});
 const resourceFormRef = ref<any>(null);
+const searchInputRef = ref<any>(null);
 
 const resourceForm = ref<StoreResourceStateBody>({
   name: '',
@@ -691,6 +695,15 @@ const clearFilters = () => {
   filter.value = '';
   filterType.value = null;
   filterState.value = null;
+};
+
+const handleSearchFocus = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target && target.select && typeof target.select === 'function') {
+    setTimeout(() => {
+      target.select();
+    }, 0);
+  }
 };
 
 const onRequest = (props: any) => {
