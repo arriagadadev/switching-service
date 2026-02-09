@@ -157,6 +157,8 @@ $dark-hover: #2d2d2d;
     background-color: $dark-bg-secondary;
     color: $dark-text-primary;
     border: 1px solid $dark-border;
+    cursor: text;
+    pointer-events: auto !important;
     
     &:hover {
       border-color: #64b5f6;
@@ -169,6 +171,8 @@ $dark-hover: #2d2d2d;
   
   .q-field__native {
     color: $dark-text-primary;
+    cursor: text;
+    pointer-events: auto !important;
   }
   
   .q-field__label {
@@ -181,12 +185,70 @@ $dark-hover: #2d2d2d;
   
   .q-field__input {
     color: $dark-text-primary;
+    cursor: text;
+    pointer-events: auto !important;
   }
   
   // Asegurar que el input sea clickeable
   input {
+    cursor: text !important;
+    color: $dark-text-primary !important;
+    pointer-events: auto !important;
+  }
+  
+  // Asegurar que el área del input sea clickeable
+  .q-field__inner {
     cursor: text;
+    pointer-events: auto !important;
+  }
+  
+  .q-field__control-container {
+    cursor: text !important;
+    pointer-events: auto !important;
+  }
+}
+
+// Inputs específicos
+.q-input {
+  .q-field__control {
+    cursor: text !important;
     color: $dark-text-primary;
+    pointer-events: auto !important;
+  }
+  
+  input {
+    cursor: text !important;
+    color: $dark-text-primary !important;
+    pointer-events: auto !important;
+  }
+  
+  .q-field__native {
+    color: $dark-text-primary;
+    cursor: text !important;
+    pointer-events: auto !important;
+  }
+  
+  .q-field__inner {
+    cursor: text !important;
+    pointer-events: auto !important;
+  }
+  
+  .q-field__control-container {
+    cursor: text !important;
+    pointer-events: auto !important;
+  }
+  
+  // Asegurar que el input sea completamente clickeable
+  &.search-input {
+    .q-field__control {
+      pointer-events: auto !important;
+    }
+    
+    input {
+      pointer-events: auto !important;
+      -webkit-user-select: text;
+      user-select: text;
+    }
   }
 }
 
@@ -202,6 +264,21 @@ $dark-hover: #2d2d2d;
   
   .q-field__control {
     color: $dark-text-primary !important;
+  }
+  
+  // Asegurar que el valor seleccionado sea visible
+  .q-field__native > span,
+  .q-field__input > span {
+    color: $dark-text-primary !important;
+  }
+  
+  // Slot selected - valor seleccionado visible
+  .q-field__selected {
+    color: $dark-text-primary !important;
+    
+    span {
+      color: $dark-text-primary !important;
+    }
   }
   
   // Valor seleccionado visible
@@ -250,42 +327,23 @@ $dark-hover: #2d2d2d;
   }
 }
 
-.q-input {
-  .q-field__control {
-    cursor: text;
-    color: $dark-text-primary;
-  }
-  
-  input {
-    cursor: text;
-    color: $dark-text-primary;
-  }
-  
-  .q-field__native {
-    color: $dark-text-primary;
-  }
-}
-
-.q-select {
-  .q-field__native {
-    color: $dark-text-primary;
-  }
-  
-  .q-field__input {
-    color: $dark-text-primary;
-  }
-}
-
 // Botones toggle - Dark theme
 .q-btn-toggle {
-  background-color: $dark-bg-tertiary;
+  background-color: $dark-bg-tertiary !important;
   border-radius: 4px;
+  border: 1px solid $dark-border;
   
   .q-btn {
+    color: $dark-text-secondary !important;
+    background-color: transparent !important;
+    border-radius: 4px;
+    position: relative;
+    
     &.q-btn--active {
       background-color: #1976d2 !important;
       color: $dark-text-primary !important;
-      box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+      box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3) !important;
+      z-index: 1;
     }
     
     &:not(.q-btn--active) {
@@ -296,6 +354,12 @@ $dark-hover: #2d2d2d;
         background-color: $dark-bg-secondary !important;
         color: $dark-text-primary !important;
       }
+    }
+    
+    // Asegurar que los iconos y labels sean visibles
+    .q-icon,
+    .q-btn__content {
+      color: inherit !important;
     }
   }
 }
@@ -441,7 +505,7 @@ $dark-hover: #2d2d2d;
   }
 }
 
-// Mejoras específicas para elementos con texto gris - Dark theme
+// Mejoras específicas para elementos con texto gris
 .text-grey-7, .text-grey-8 {
   color: $dark-text-tertiary !important;
 }

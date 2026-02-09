@@ -29,8 +29,10 @@
               outlined
               dense
               clearable
+              @click.stop="handleSearchClick"
               @focus="handleSearchFocus"
               ref="searchInputRef"
+              class="search-input"
             >
               <template v-slot:prepend>
                 <q-icon name="search" />
@@ -47,8 +49,13 @@
               clearable
               emit-value
               map-options
-              :display-value="filterType ? typeFilterOptions.find(o => o.value === filterType)?.label || '' : ''"
-            />
+            >
+              <template v-slot:selected>
+                <span v-if="filterType" class="text-white">
+                  {{ typeFilterOptions.find(o => o.value === filterType)?.label }}
+                </span>
+              </template>
+            </q-select>
           </div>
           <div class="col-12 col-md-2">
             <q-select
@@ -60,8 +67,13 @@
               clearable
               emit-value
               map-options
-              :display-value="filterState !== null ? stateFilterOptions.find(o => o.value === filterState)?.label || '' : ''"
-            />
+            >
+              <template v-slot:selected>
+                <span v-if="filterState !== null" class="text-white">
+                  {{ stateFilterOptions.find(o => o.value === filterState)?.label }}
+                </span>
+              </template>
+            </q-select>
           </div>
           <div class="col-12 col-md-2">
             <q-btn
@@ -81,6 +93,7 @@
               toggle-color="primary"
               unelevated
               spread
+              no-caps
             />
           </div>
         </div>
@@ -587,7 +600,7 @@ const stateFilterOptions = [
 const viewModeOptions = [
   { label: 'Tabla', value: 'table', icon: 'table_chart' },
   { label: 'Tarjetas', value: 'cards', icon: 'view_module' },
-];
+] as const;
 
 // Cargar preferencia de vista desde localStorage
 onMounted(() => {
@@ -595,11 +608,11 @@ onMounted(() => {
   if (savedViewMode === 'table' || savedViewMode === 'cards') {
     viewMode.value = savedViewMode;
   }
-  
-  // Guardar preferencia cuando cambie
-  watch(viewMode, (newMode) => {
-    localStorage.setItem('resourcesViewMode', newMode);
-  });
+});
+
+// Guardar preferencia cuando cambie
+watch(viewMode, (newMode) => {
+  localStorage.setItem('resourcesViewMode', newMode);
 });
 
 const pagination = ref({
@@ -695,6 +708,17 @@ const clearFilters = () => {
   filter.value = '';
   filterType.value = null;
   filterState.value = null;
+};
+
+const handleSearchClick = () => {
+  // Asegurar que el input sea focusable
+  if (searchInputRef.value) {
+    const input = searchInputRef.value.$el?.querySelector('input');
+    if (input) {
+      input.focus();
+      input.click();
+    }
+  }
 };
 
 const handleSearchFocus = (event: Event) => {
