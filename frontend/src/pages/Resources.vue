@@ -29,6 +29,8 @@
               outlined
               dense
               clearable
+              autofocus
+              @focus="$event.target.select()"
             >
               <template v-slot:prepend>
                 <q-icon name="search" />
@@ -74,6 +76,8 @@
               :options="viewModeOptions"
               color="primary"
               dense
+              toggle-color="primary"
+              unelevated
             />
           </div>
         </div>
@@ -580,6 +584,19 @@ const viewModeOptions = [
   { label: 'Tabla', value: 'table', icon: 'table_chart' },
   { label: 'Tarjetas', value: 'cards', icon: 'view_module' },
 ];
+
+// Cargar preferencia de vista desde localStorage
+onMounted(() => {
+  const savedViewMode = localStorage.getItem('resourcesViewMode');
+  if (savedViewMode === 'table' || savedViewMode === 'cards') {
+    viewMode.value = savedViewMode;
+  }
+  
+  // Guardar preferencia cuando cambie
+  watch(viewMode, (newMode) => {
+    localStorage.setItem('resourcesViewMode', newMode);
+  });
+});
 
 const pagination = ref({
   sortBy: 'name',

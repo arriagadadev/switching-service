@@ -2,6 +2,14 @@
   <q-layout view="hHh lpR fFf">
     <q-header elevated class="bg-primary text-white">
       <q-toolbar>
+        <q-btn
+          flat
+          dense
+          round
+          icon="menu"
+          @click="toggleDrawer"
+          class="q-mr-sm"
+        />
         <q-toolbar-title>
           <q-icon name="settings" class="q-mr-sm" />
           Switching Service
@@ -11,9 +19,19 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-white">
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      bordered
+      :width="280"
+      :mini="miniState"
+      :breakpoint="1024"
+      class="bg-grey-1"
+    >
       <q-list class="q-pa-sm">
-        <q-item-label header class="text-grey-8 q-pa-sm"> Navegación </q-item-label>
+        <q-item-label header class="text-grey-8 q-pa-sm">
+          {{ miniState ? '' : 'Navegación' }}
+        </q-item-label>
         <q-item
           clickable
           v-ripple
@@ -25,7 +43,7 @@
           <q-item-section avatar>
             <q-icon name="dashboard" />
           </q-item-section>
-          <q-item-section>
+          <q-item-section v-if="!miniState">
             <q-item-label>Dashboard</q-item-label>
           </q-item-section>
         </q-item>
@@ -40,7 +58,7 @@
           <q-item-section avatar>
             <q-icon name="storage" />
           </q-item-section>
-          <q-item-section>
+          <q-item-section v-if="!miniState">
             <q-item-label>Recursos</q-item-label>
           </q-item-section>
         </q-item>
@@ -55,11 +73,46 @@
           <q-item-section avatar>
             <q-icon name="schedule" />
           </q-item-section>
-          <q-item-section>
+          <q-item-section v-if="!miniState">
             <q-item-label>Programaciones</q-item-label>
           </q-item-section>
         </q-item>
+        <q-item
+          clickable
+          v-ripple
+          to="/change-password"
+          exact
+          active-class="bg-primary text-white"
+          class="q-mb-xs rounded-borders"
+        >
+          <q-item-section avatar>
+            <q-icon name="lock" />
+          </q-item-section>
+          <q-item-section v-if="!miniState">
+            <q-item-label>Cambiar Contraseña</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
+      <div v-if="!miniState" class="absolute-bottom q-pa-md">
+        <q-btn
+          flat
+          dense
+          round
+          icon="chevron_left"
+          @click="toggleMini"
+          class="full-width"
+        />
+      </div>
+      <div v-else class="absolute-bottom q-pa-md">
+        <q-btn
+          flat
+          dense
+          round
+          icon="chevron_right"
+          @click="toggleMini"
+          class="full-width"
+        />
+      </div>
     </q-drawer>
 
     <q-page-container>
@@ -69,12 +122,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { signOut } from 'aws-amplify/auth';
 
-const leftDrawerOpen = ref(false);
 const router = useRouter();
+const leftDrawerOpen = ref(true);
+const miniState = ref(false);
+
+// Cargar estado del sidebar desde localStorage
+onMounted(() => {
+  const savedMiniState = localStorage.getItem('sidebarMiniState');
+  if (savedMiniState !== null) {
+    miniState.value = savedMiniState === 'true';
+  }
+});
+
+const toggleDrawer = () => {
+  leftDrawerOpen.value = !leftDrawerOpen.value;
+};
+
+const toggleMini = () => {
+  miniState.value = !miniState.value;
+  localStorage.setItem('sidebarMiniState', String(miniState.value));
+};
 
 const handleLogout = async () => {
   try {

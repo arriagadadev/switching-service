@@ -2,10 +2,14 @@
 
 // Mejoras de contraste para el sidebar
 .q-drawer {
+  background-color: #f5f5f5 !important;
+  border-right: 1px solid #e0e0e0;
+  
   .q-item {
     color: #424242;
     border-radius: 8px;
     margin-bottom: 4px;
+    transition: all 0.2s ease;
     
     &.q-item--active {
       background-color: #1976d2 !important;
@@ -21,11 +25,17 @@
     }
     
     &:hover:not(.q-item--active) {
-      background-color: #f5f5f5;
+      background-color: #e3f2fd;
+      color: #1976d2;
+      
+      .q-icon {
+        color: #1976d2;
+      }
     }
     
     .q-icon {
       color: #757575;
+      transition: color 0.2s ease;
     }
     
     &.q-item--active .q-icon {
@@ -41,11 +51,17 @@
   .q-item-label {
     color: #616161;
     font-weight: 600;
+    font-size: 0.875rem;
   }
 }
 
-// Mejoras para las tarjetas del dashboard - asegurar ancho completo
+// Mejoras para el contenido principal - mejor contraste
+.q-page-container {
+  background-color: #fafafa;
+}
+
 .q-page {
+  background-color: #ffffff;
   max-width: 100%;
   width: 100%;
   
@@ -64,7 +80,66 @@
   }
 }
 
-// Asegurar que las cards ocupen todo el ancho disponible
+// Mejoras para las cards
 .q-card {
   width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  
+  &.flat {
+    box-shadow: none;
+    border: 1px solid #e0e0e0;
+  }
+}
+
+// Mejoras para inputs y selects
+.q-field--outlined .q-field__control {
+  background-color: #ffffff;
+}
+
+// Mejoras para el buscador - asegurar que sea clickeable
+.q-input {
+  .q-field__control {
+    cursor: text;
+  }
+  
+  input {
+    cursor: text;
+  }
+}
+
+// Mejoras para botones toggle
+.q-btn-toggle {
+  .q-btn {
+    &.q-btn--active {
+      background-color: #1976d2 !important;
+      color: white !important;
+    }
+    
+    &:not(.q-btn--active) {
+      background-color: #f5f5f5;
+      color: #757575;
+    }
+  }
+}
+
+// Mejoras para tablas
+.q-table {
+  background-color: #ffffff;
+  
+  thead th {
+    background-color: #f5f5f5;
+    color: #424242;
+    font-weight: 600;
+  }
+  
+  tbody tr:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+// Mejoras para el header
+.q-header {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
