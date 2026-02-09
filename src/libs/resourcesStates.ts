@@ -60,25 +60,31 @@ export const updateResourceState = async (resourceState: UpdateResourceStateInpu
   if (!oldResourceState) {
     throw new HttpError('Entity does not exists', 404);
   }
+  const setParts = ['#resourceIdentifier = :resourceIdentifier', '#type = :type', '#name = :name', '#updatedAt = :timestamp'];
+  const ExpressionAttributeNames: Record<string, string> = {
+    '#resourceIdentifier': 'resourceIdentifier',
+    '#type': 'type',
+    '#name': 'name',
+    '#updatedAt': 'updatedAt',
+  };
+  const ExpressionAttributeValues: Record<string, unknown> = {
+    ':resourceIdentifier': resourceState.resourceIdentifier,
+    ':type': resourceState.type,
+    ':name': resourceState.name,
+    ':timestamp': resourceState.timestamp,
+  };
+  if (resourceState.serviceURL !== undefined) {
+    setParts.push('#serviceURL = :serviceURL');
+    ExpressionAttributeNames['#serviceURL'] = 'serviceURL';
+    ExpressionAttributeValues[':serviceURL'] = resourceState.serviceURL;
+  }
   const params = {
     TableName,
-    Key: {
-      id: resourceState.id,
-    },
-    UpdateExpression: 'SET #resourceIdentifier = :resourceIdentifier, #type = :type, #name = :name, #updatedAt = :timestamp',
-    ExpressionAttributeNames: {
-      '#resourceIdentifier': 'resourceIdentifier',
-      '#type': 'type',
-      '#name': 'name',
-      '#updatedAt': 'updatedAt',
-    },
-    ExpressionAttributeValues: {
-      ':resourceIdentifier': resourceState.resourceIdentifier,
-      ':type': resourceState.type,
-      ':name': resourceState.name,
-      ':timestamp': resourceState.timestamp,
-    },
-    ReturnValues: 'ALL_NEW'
+    Key: { id: resourceState.id },
+    UpdateExpression: `SET ${setParts.join(', ')}`,
+    ExpressionAttributeNames,
+    ExpressionAttributeValues,
+    ReturnValues: 'ALL_NEW' as const,
   };
   const result = await dynamodb.update(params).promise();
   return {

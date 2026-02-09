@@ -8,18 +8,21 @@ export type ResourceStateResource = {
   state: State;
   name: string;
   timestamp: number;
+  serviceURL?: string;
 };
 
 export type StoreResourceStateBody = {
   resourceIdentifier: string;
   type: ResourceType;
   name: string;
+  serviceURL?: string;
 };
 
 export type UpdateResourceStateBody = {
   resourceIdentifier: string;
   type: ResourceType;
   name: string;
+  serviceURL?: string;
 };
 
 export type Resource = {

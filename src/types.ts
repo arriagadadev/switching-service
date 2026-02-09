@@ -8,6 +8,7 @@ export type ResourceState = {
     state: State;
     name: string;
     timestamp: number;
+    serviceURL?: string; // optional URL if the service is exposed to the internet
 }
 
 export type ResourceStateResource = {
@@ -17,18 +18,21 @@ export type ResourceStateResource = {
     state: State;
     name: string;
     timestamp: number;
+    serviceURL?: string;
 }
 
 export type StoreResourceStateBody = {
     resourceIdentifier: string; // arn or similar identifier of the resource
     type: ResourceType;
     name: string;
+    serviceURL?: string;
 }
 
 export type UpdateResourceStateBody = {
     resourceIdentifier: string; // arn or similar identifier of the resource
     type: ResourceType;
     name: string;
+    serviceURL?: string;
 }
 
 export type ResourceStateInput = {
@@ -36,6 +40,7 @@ export type ResourceStateInput = {
     type: ResourceType;
     name: string;
     timestamp: number;
+    serviceURL?: string;
 }
 
 export type UpdateResourceStateInput = {
@@ -44,6 +49,7 @@ export type UpdateResourceStateInput = {
     type: ResourceType;
     name: string;
     timestamp: number;
+    serviceURL?: string;
 }
 
 export type Resource = {

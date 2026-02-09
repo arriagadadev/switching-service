@@ -48,11 +48,20 @@
           </thead>
           <tbody>
             <tr v-for="r in paginatedResources" :key="r.id">
-              <td>{{ r.name }}</td>
+              <td>
+                <template v-if="r.serviceURL && r.state === 1">
+                  <a :href="r.serviceURL" target="_blank" rel="noopener noreferrer" class="resource-name-link">{{ r.name }}</a>
+                </template>
+                <template v-else>{{ r.name }}</template>
+              </td>
               <td><span class="chip" :class="chipClassForType(r.type)">{{ r.type }}</span></td>
               <td class="mono">{{ r.resourceIdentifier }}</td>
               <td><span class="chip" :class="r.state === 1 ? 'success' : 'error'">{{ r.state === 1 ? 'Activo' : 'Inactivo' }}</span></td>
               <td>
+                <template v-if="r.serviceURL">
+                  <a v-if="r.state === 1" :href="r.serviceURL" target="_blank" rel="noopener noreferrer" class="btn-icon" title="Abrir URL"><span class="material-symbols-outlined">open_in_new</span></a>
+                  <span v-else class="btn-icon disabled" title="Recurso apagado"><span class="material-symbols-outlined">open_in_new</span></span>
+                </template>
                 <button class="btn-icon" @click="viewResource(r)" title="Ver"><span class="material-symbols-outlined">visibility</span></button>
                 <button class="btn-icon" @click="editResource(r)" title="Editar"><span class="material-symbols-outlined">edit</span></button>
                 <button class="btn-icon" @click="handleStartStop(r)" title="Iniciar/Detener" :disabled="actionLoading[r.id]"><span class="material-symbols-outlined">{{ r.state === 0 ? 'play_arrow' : 'stop' }}</span></button>
@@ -73,8 +82,19 @@
     <div v-else class="cards-grid">
       <div v-for="r in paginatedResources" :key="r.id" class="resource-card card">
         <div class="card-top">
-          <h4>{{ r.name }}</h4>
-          <span class="chip" :class="r.state === 1 ? 'success' : 'error'">{{ r.state === 1 ? 'Activo' : 'Inactivo' }}</span>
+          <h4>
+            <template v-if="r.serviceURL && r.state === 1">
+              <a :href="r.serviceURL" target="_blank" rel="noopener noreferrer" class="resource-name-link">{{ r.name }}</a>
+            </template>
+            <template v-else>{{ r.name }}</template>
+          </h4>
+          <span class="card-top-right">
+            <template v-if="r.serviceURL">
+              <a v-if="r.state === 1" :href="r.serviceURL" target="_blank" rel="noopener noreferrer" class="btn-icon" title="Abrir URL"><span class="material-symbols-outlined">open_in_new</span></a>
+              <span v-else class="btn-icon disabled" title="Recurso apagado"><span class="material-symbols-outlined">open_in_new</span></span>
+            </template>
+            <span class="chip" :class="r.state === 1 ? 'success' : 'error'">{{ r.state === 1 ? 'Activo' : 'Inactivo' }}</span>
+          </span>
         </div>
         <p class="mono">{{ r.resourceIdentifier }}</p>
         <span class="chip" :class="chipClassForType(r.type)">{{ r.type }}</span>
@@ -126,6 +146,11 @@
           <label>Identificador (ARN) *</label>
           <input v-model="resourceForm.resourceIdentifier" required />
         </div>
+        <div class="field">
+          <label>URL del servicio (opcional)</label>
+          <input v-model="resourceForm.serviceURL" type="url" placeholder="https://..." />
+          <span class="hint">Si el recurso expone una URL en internet, indícala aquí</span>
+        </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" @click="showModal = false">Cancelar</button>
           <button type="button" class="btn btn-primary" :disabled="saving" @click="saveResource">{{ saving ? 'Guardando...' : 'Guardar' }}</button>
@@ -136,12 +161,24 @@
     <Modal v-model="showDetailModal" title="Detalles del Recurso" width="500px">
       <div v-if="selectedResource">
         <dl class="detail-list">
-          <div><dt>Nombre</dt><dd>{{ selectedResource.name }}</dd></div>
+          <div><dt>Nombre</dt><dd>
+            <template v-if="selectedResource.serviceURL && selectedResource.state === 1">
+              <a :href="selectedResource.serviceURL" target="_blank" rel="noopener noreferrer" class="resource-name-link">{{ selectedResource.name }}</a>
+            </template>
+            <template v-else>{{ selectedResource.name }}</template>
+          </dd></div>
           <div><dt>Tipo</dt><dd><span class="chip" :class="chipClassForType(selectedResource.type)">{{ selectedResource.type }}</span></dd></div>
           <div><dt>Estado</dt><dd><span class="chip" :class="selectedResource.state === 1 ? 'success' : 'error'">{{ selectedResource.state === 1 ? 'Activo' : 'Inactivo' }}</span></dd></div>
           <div><dt>Identificador</dt><dd class="mono">{{ selectedResource.resourceIdentifier }}</dd></div>
+          <div v-if="selectedResource.serviceURL"><dt>URL</dt><dd>
+            <a v-if="selectedResource.state === 1" :href="selectedResource.serviceURL" target="_blank" rel="noopener noreferrer" class="resource-name-link">{{ selectedResource.serviceURL }}</a>
+            <span v-else class="mono">{{ selectedResource.serviceURL }}</span>
+          </dd></div>
         </dl>
         <div class="modal-actions">
+          <template v-if="selectedResource.serviceURL && selectedResource.state === 1">
+            <a :href="selectedResource.serviceURL" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Abrir URL</a>
+          </template>
           <button class="btn btn-secondary" @click="editResource(selectedResource); showDetailModal = false">Editar</button>
           <button class="btn" :class="selectedResource.state === 0 ? 'btn-success' : 'btn-danger'" @click="handleStartStop(selectedResource); showDetailModal = false">
             {{ selectedResource.state === 0 ? 'Iniciar' : 'Detener' }}
@@ -186,6 +223,7 @@ const resourceForm = ref<StoreResourceStateBody>({
   name: '',
   resourceIdentifier: '',
   type: 'RDS',
+  serviceURL: '',
 });
 
 const confirmVisible = ref(false);
@@ -270,9 +308,12 @@ const onTypeChange = async () => {
 const saveResource = async () => {
   saving.value = true;
   try {
+    const serviceURLTrimmed = (resourceForm.value.serviceURL ?? '').trim();
     const data = {
       ...resourceForm.value,
       resourceIdentifier: String(resourceForm.value.resourceIdentifier || ''),
+      // Al editar siempre enviamos serviceURL para poder borrarlo; al crear solo si tiene valor
+      ...(editingResource.value ? { serviceURL: serviceURLTrimmed } : serviceURLTrimmed ? { serviceURL: serviceURLTrimmed } : {}),
     };
     if (editingResource.value) {
       await resourcesService.update(editingResource.value.id, data);
@@ -298,14 +339,14 @@ const viewResource = (r: ResourceStateResource) => {
 
 const editResource = (r: ResourceStateResource) => {
   editingResource.value = r;
-  resourceForm.value = { name: r.name, resourceIdentifier: r.resourceIdentifier, type: r.type };
+  resourceForm.value = { name: r.name, resourceIdentifier: r.resourceIdentifier, type: r.type, serviceURL: r.serviceURL ?? '' };
   onTypeChange();
   showModal.value = true;
 };
 
 const resetForm = () => {
   editingResource.value = null;
-  resourceForm.value = { name: '', resourceIdentifier: '', type: 'RDS' };
+  resourceForm.value = { name: '', resourceIdentifier: '', type: 'RDS', serviceURL: '' };
 };
 
 const handleStartStop = (r: ResourceStateResource) => {
@@ -420,6 +461,12 @@ onMounted(() => {
 .form .field { margin-bottom: 16px; }
 .form .field label { display: block; margin-bottom: 6px; color: var(--text-tertiary); font-size: 0.875rem; }
 .form .field input, .form .field select { width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); }
+.form .field .hint { display: block; margin-top: 4px; font-size: 0.75rem; color: var(--text-tertiary); }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
 .empty { text-align: center; color: var(--text-tertiary); padding: 24px; }
+
+.resource-name-link { color: var(--primary); text-decoration: none; }
+.resource-name-link:hover { text-decoration: underline; }
+.card-top-right { display: flex; align-items: center; gap: 8px; }
+.btn-icon.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 </style>
