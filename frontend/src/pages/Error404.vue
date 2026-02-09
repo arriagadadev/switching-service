@@ -1,21 +1,50 @@
 <template>
-  <div class="fullscreen bg-blue text-white text-center q-pa-md flex flex-center">
-    <div>
-      <div style="font-size: 30vh">404</div>
-      <div class="text-h2" style="opacity: 0.4">Oops. Nada aquí...</div>
-      <q-btn
-        class="q-mt-xl"
-        color="white"
-        text-color="blue"
-        unelevated
-        to="/"
-        label="Ir al Inicio"
-        no-caps
-      />
+  <div class="error-page">
+    <div class="error-content">
+      <span class="error-code">404</span>
+      <h2>Oops. Nada aquí...</h2>
+      <router-link to="/" class="btn btn-primary">Ir al Inicio</router-link>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-// Error 404 page
-</script>
+<style scoped>
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  padding: 16px;
+}
+
+.error-content {
+  text-align: center;
+}
+
+.error-code {
+  font-size: 20vh;
+  font-weight: 700;
+  line-height: 1;
+}
+
+h2 {
+  opacity: 0.8;
+  margin: 16px 0 32px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: white;
+  color: var(--primary);
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: #f0f0f0;
+}
+</style>

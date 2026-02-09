@@ -1,6 +1,7 @@
-import axios, { type AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
+// Usar rutas con /api/ que están protegidas con Cognito
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || '';
 const API_BASE_PATH = '/api';
 
@@ -15,6 +16,7 @@ class ApiService {
       },
     });
 
+    // Interceptor para agregar el token de Cognito a las peticiones
     this.api.interceptors.request.use(
       async (config) => {
         try {
@@ -27,9 +29,12 @@ class ApiService {
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        return Promise.reject(error);
+      }
     );
 
+    // Interceptor para manejar errores de autenticación
     this.api.interceptors.response.use(
       (response) => response,
       async (error) => {

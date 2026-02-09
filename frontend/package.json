@@ -1,33 +1,26 @@
 {
-  "name": "switching-service-frontend",
-  "version": "1.0.0",
+  "name": "frontend",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "quasar dev",
-    "build": "quasar build",
-    "lint": "eslint --ext .js,.ts,.vue ./src"
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@aws-amplify/auth": "^6.0.0",
-    "@aws-amplify/core": "^6.0.0",
-    "@quasar/extras": "^1.16.9",
-    "aws-amplify": "^6.0.0",
-    "axios": "^1.6.0",
-    "quasar": "^2.14.0",
-    "vue": "^3.4.0",
-    "vue-router": "^4.2.5"
+    "@aws-amplify/auth": "^6.19.1",
+    "aws-amplify": "^6.16.2",
+    "axios": "^1.13.5",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@quasar/app-vite": "^1.4.0",
-    "@types/node": "^20.10.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-vue": "^9.19.2",
-    "prettier": "^3.1.1",
-    "typescript": "^5.3.3"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vue-tsc": "^3.1.4"
   }
 }

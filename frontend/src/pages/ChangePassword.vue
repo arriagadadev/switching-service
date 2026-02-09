@@ -1,190 +1,111 @@
 <template>
-  <q-page class="q-pa-lg">
-    <div class="row justify-center">
-      <div class="col-12 col-md-6 col-lg-5">
-        <q-card flat bordered>
-          <q-card-section>
-            <div class="text-h5 q-mb-md">Cambiar Contraseña</div>
-            <div class="text-caption text-grey-7 q-mb-lg">
-              Actualiza tu contraseña de acceso al sistema
-            </div>
+  <div class="page">
+    <div class="card change-password-card">
+      <h1>Cambiar Contraseña</h1>
+      <p class="subtitle">Actualiza tu contraseña de acceso al sistema</p>
 
-            <q-form @submit="onSubmit" class="q-gutter-md" ref="passwordFormRef">
-              <q-input
-                v-model="currentPassword"
-                label="Contraseña Actual *"
-                :type="showCurrentPassword ? 'text' : 'password'"
-                :rules="[(val) => !!val || 'La contraseña actual es requerida']"
-                outlined
-                :disable="loading"
-                class="password-input"
-              >
-                <template v-slot:append>
-                  <q-icon
-                    :name="showCurrentPassword ? 'visibility_off' : 'visibility'"
-                    class="cursor-pointer"
-                    @click="showCurrentPassword = !showCurrentPassword"
-                  >
-                    <q-tooltip>
-                      {{ showCurrentPassword ? 'Ocultar' : 'Mostrar' }}
-                    </q-tooltip>
-                  </q-icon>
-                </template>
-              </q-input>
-
-              <q-input
-                v-model="newPassword"
-                label="Nueva Contraseña *"
-                :type="showNewPassword ? 'text' : 'password'"
-                :rules="[
-                  (val) => !!val || 'La nueva contraseña es requerida',
-                  (val) => val.length >= 8 || 'Mínimo 8 caracteres',
-                  (val) =>
-                    /[A-Z]/.test(val) || 'Debe contener al menos una mayúscula',
-                  (val) =>
-                    /[a-z]/.test(val) || 'Debe contener al menos una minúscula',
-                  (val) => /[0-9]/.test(val) || 'Debe contener al menos un número',
-                ]"
-                outlined
-                :disable="loading"
-                hint="Mínimo 8 caracteres, con mayúsculas, minúsculas y números"
-                class="password-input"
-              >
-                <template v-slot:append>
-                  <q-icon
-                    :name="showNewPassword ? 'visibility_off' : 'visibility'"
-                    class="cursor-pointer"
-                    @click="showNewPassword = !showNewPassword"
-                  >
-                    <q-tooltip>
-                      {{ showNewPassword ? 'Ocultar' : 'Mostrar' }}
-                    </q-tooltip>
-                  </q-icon>
-                </template>
-              </q-input>
-
-              <q-input
-                v-model="confirmPassword"
-                label="Confirmar Nueva Contraseña *"
-                :type="showConfirmPassword ? 'text' : 'password'"
-                :rules="[
-                  (val) => !!val || 'La confirmación es requerida',
-                  (val) => val === newPassword || 'Las contraseñas no coinciden',
-                ]"
-                outlined
-                :disable="loading"
-                class="password-input"
-              >
-                <template v-slot:append>
-                  <q-icon
-                    :name="showConfirmPassword ? 'visibility_off' : 'visibility'"
-                    class="cursor-pointer"
-                    @click="showConfirmPassword = !showConfirmPassword"
-                  >
-                    <q-tooltip>
-                      {{ showConfirmPassword ? 'Ocultar' : 'Mostrar' }}
-                    </q-tooltip>
-                  </q-icon>
-                </template>
-              </q-input>
-
-              <div class="row justify-end q-gutter-sm q-mt-lg">
-                <q-btn
-                  flat
-                  label="Cancelar"
-                  color="primary"
-                  @click="$router.push('/')"
-                  :disable="loading"
-                />
-                <q-btn
-                  label="Cambiar Contraseña"
-                  type="submit"
-                  color="primary"
-                  :loading="loading"
-                  unelevated
-                />
-              </div>
-            </q-form>
-          </q-card-section>
-        </q-card>
-      </div>
+      <form @submit.prevent="onSubmit" class="form">
+        <div class="field">
+          <label>Contraseña Actual *</label>
+          <div class="input-wrap">
+            <input
+              v-model="currentPassword"
+              :type="showCurrent ? 'text' : 'password'"
+              required
+              :disabled="loading"
+            />
+            <button type="button" class="visibility-btn" @click="showCurrent = !showCurrent">
+              <span class="material-symbols-outlined">{{ showCurrent ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Nueva Contraseña *</label>
+          <div class="input-wrap">
+            <input
+              v-model="newPassword"
+              :type="showNew ? 'text' : 'password'"
+              required
+              minlength="8"
+              :disabled="loading"
+            />
+            <button type="button" class="visibility-btn" @click="showNew = !showNew">
+              <span class="material-symbols-outlined">{{ showNew ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <span class="hint">Mínimo 8 caracteres, con mayúsculas, minúsculas y números</span>
+        </div>
+        <div class="field">
+          <label>Confirmar Nueva Contraseña *</label>
+          <div class="input-wrap">
+            <input
+              v-model="confirmPassword"
+              :type="showConfirm ? 'text' : 'password'"
+              required
+              :disabled="loading"
+            />
+            <button type="button" class="visibility-btn" @click="showConfirm = !showConfirm">
+              <span class="material-symbols-outlined">{{ showConfirm ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <router-link to="/" class="btn btn-secondary">Cancelar</router-link>
+          <button type="submit" class="btn btn-primary" :disabled="loading">
+            {{ loading ? 'Guardando...' : 'Cambiar Contraseña' }}
+          </button>
+        </div>
+      </form>
     </div>
-  </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { updatePassword, getCurrentUser } from 'aws-amplify/auth';
-import { useQuasar } from 'quasar';
+import { updatePassword } from 'aws-amplify/auth';
+import { useToast } from '../composables/useToast';
 
-const $q = useQuasar();
+const toast = useToast();
 const router = useRouter();
 const loading = ref(false);
 const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
-const passwordFormRef = ref<any>(null);
-const showCurrentPassword = ref(false);
-const showNewPassword = ref(false);
-const showConfirmPassword = ref(false);
+const showCurrent = ref(false);
+const showNew = ref(false);
+const showConfirm = ref(false);
+
+const validatePassword = (p: string) =>
+  p.length >= 8 && /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p);
 
 const onSubmit = async () => {
+  if (newPassword.value !== confirmPassword.value) {
+    toast.error('Las contraseñas no coinciden');
+    return;
+  }
+  if (!validatePassword(newPassword.value)) {
+    toast.error('La contraseña debe tener 8+ caracteres, mayúscula, minúscula y número');
+    return;
+  }
+
   loading.value = true;
   try {
-    // Verificar que las contraseñas coincidan
-    if (newPassword.value !== confirmPassword.value) {
-      $q.notify({
-        type: 'negative',
-        message: 'Las contraseñas no coinciden',
-        position: 'top',
-      });
-      loading.value = false;
-      return;
-    }
-
-    // Cambiar la contraseña usando Amplify
     await updatePassword({
       oldPassword: currentPassword.value,
       newPassword: newPassword.value,
     });
-
-    $q.notify({
-      type: 'positive',
-      message: 'Contraseña actualizada correctamente',
-      position: 'top',
-      icon: 'check_circle',
-    });
-
-    // Limpiar formulario
+    toast.success('Contraseña actualizada correctamente');
     currentPassword.value = '';
     newPassword.value = '';
     confirmPassword.value = '';
-    if (passwordFormRef.value) {
-      passwordFormRef.value.resetValidation();
-    }
-
-    // Opcional: redirigir después de un momento
-    setTimeout(() => {
-      router.push('/');
-    }, 1500);
-  } catch (error: any) {
-    console.error('Error al cambiar contraseña:', error);
-    let errorMessage = 'Error al cambiar la contraseña';
-    
-    if (error.name === 'NotAuthorizedException') {
-      errorMessage = 'La contraseña actual es incorrecta';
-    } else if (error.name === 'InvalidPasswordException') {
-      errorMessage = 'La nueva contraseña no cumple con los requisitos';
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    $q.notify({
-      type: 'negative',
-      message: errorMessage,
-      position: 'top',
-    });
+    setTimeout(() => router.push('/'), 1500);
+  } catch (e: any) {
+    let msg = 'Error al cambiar la contraseña';
+    if (e.name === 'NotAuthorizedException') msg = 'La contraseña actual es incorrecta';
+    else if (e.name === 'InvalidPasswordException') msg = 'La nueva contraseña no cumple los requisitos';
+    else if (e.message) msg = e.message;
+    toast.error(msg);
   } finally {
     loading.value = false;
   }
@@ -192,38 +113,27 @@ const onSubmit = async () => {
 </script>
 
 <style scoped>
-/* Visible text in password inputs - dark theme */
-.password-input :deep(input) {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
+.change-password-card { max-width: 480px; margin: 0 auto; }
+.change-password-card h1 { margin: 0 0 8px; font-size: 1.25rem; }
+.subtitle { color: var(--text-tertiary); margin: 0 0 24px; font-size: 0.875rem; }
 
-.password-input :deep(.q-field__native),
-.password-input :deep(.q-field__input) {
-  color: #ffffff !important;
+.form { display: flex; flex-direction: column; gap: 16px; }
+.field label { display: block; margin-bottom: 6px; color: var(--text-tertiary); font-size: 0.875rem; }
+.input-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px;
 }
+.input-wrap input {
+  flex: 1; padding: 10px 12px; background: none; border: none;
+  color: var(--text-primary); font-size: 1rem;
+}
+.input-wrap input:focus { outline: none; }
+.visibility-btn { background: none; color: var(--text-tertiary); padding: 8px; }
+.visibility-btn:hover { color: var(--text-primary); }
+.hint { font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px; display: block; }
 
-/* Align control content - prevent misalignment with error icon */
-.password-input :deep(.q-field__control) {
-  align-items: center;
-}
-
-.password-input :deep(.q-field__control-container) {
-  align-items: center;
-  min-height: 40px;
-}
-
-.password-input :deep(.q-field__prepend) {
-  align-items: center;
-  padding-right: 8px;
-}
-
-.password-input :deep(.q-field__append) {
-  align-items: center;
-}
-
-/* Error state - ensure error icon doesn't break layout */
-.password-input :deep(.q-field--error .q-field__control) {
-  align-items: center;
-}
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.btn { padding: 10px 20px; border-radius: 6px; font-size: 0.875rem; text-decoration: none; }
+.btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+.btn-primary { background: var(--primary); color: white; }
 </style>

@@ -6,24 +6,13 @@ frontend:
         - pwd
         - ls -la
         - |
-          if [ -f package.json ] && [ -f quasar.config.js ]; then
-            echo Already in frontend directory
-            WORK_DIR=.
-          elif [ -d frontend ] && [ -f frontend/package.json ]; then
+          if [ -d frontend ] && [ -f frontend/package.json ]; then
             echo Found frontend directory
-            WORK_DIR=frontend
+            cd frontend
           else
             echo ERROR frontend directory or package.json not found
             find . -maxdepth 2 -type f -name package.json 2>/dev/null || true
-            find . -maxdepth 1 -type d | head -20
             exit 1
-          fi
-        - |
-          if [ "$WORK_DIR" != "." ]; then
-            echo Installing dependencies in frontend
-            cd "$WORK_DIR"
-          else
-            echo Installing dependencies in current directory
           fi
         - pwd
         - test -f package.json || exit 1
@@ -31,26 +20,20 @@ frontend:
     build:
       commands:
         - |
-          if [ -f package.json ] && [ -f quasar.config.js ]; then
-            echo Already in frontend directory
-          elif [ -d frontend ] && [ -f frontend/package.json ]; then
-            echo Entering frontend directory
+          if [ -d frontend ] && [ -f frontend/package.json ]; then
             cd frontend
-          else
-            echo ERROR Cannot find frontend directory or package.json
-            exit 1
           fi
         - pwd
-        - 'echo "Checking environment variables"'
-        - 'if [ -n "$VITE_COGNITO_USER_POOL_ID" ]; then echo "VITE_COGNITO_USER_POOL_ID is set"; else echo "VITE_COGNITO_USER_POOL_ID is NOT set"; fi'
-        - 'if [ -n "$VITE_COGNITO_USER_POOL_CLIENT_ID" ]; then echo "VITE_COGNITO_USER_POOL_CLIENT_ID is set"; else echo "VITE_COGNITO_USER_POOL_CLIENT_ID is NOT set"; fi'
-        - 'if [ -n "$VITE_AWS_REGION" ]; then echo "VITE_AWS_REGION is set"; else echo "VITE_AWS_REGION is NOT set"; fi'
-        - 'if [ -n "$VITE_API_ENDPOINT" ]; then echo "VITE_API_ENDPOINT is set"; else echo "VITE_API_ENDPOINT is NOT set"; fi'
+        - echo "Checking environment variables"
+        - if [ -n "$VITE_COGNITO_USER_POOL_ID" ]; then echo "VITE_COGNITO_USER_POOL_ID is set"; else echo "VITE_COGNITO_USER_POOL_ID is NOT set"; fi
+        - if [ -n "$VITE_COGNITO_USER_POOL_CLIENT_ID" ]; then echo "VITE_COGNITO_USER_POOL_CLIENT_ID is set"; else echo "VITE_COGNITO_USER_POOL_CLIENT_ID is NOT set"; fi
+        - if [ -n "$VITE_AWS_REGION" ]; then echo "VITE_AWS_REGION is set"; else echo "VITE_AWS_REGION is NOT set"; fi
+        - if [ -n "$VITE_API_ENDPOINT" ]; then echo "VITE_API_ENDPOINT is set"; else echo "VITE_API_ENDPOINT is NOT set"; fi
         - npm run build
         - echo Build completed, checking dist directory
-        - ls -la dist/spa 2>/dev/null || ls -la dist 2>/dev/null || echo Dist not found
+        - ls -la dist 2>/dev/null || echo Dist not found
   artifacts:
-    baseDirectory: frontend/dist/spa
+    baseDirectory: frontend/dist
     files:
       - '**/*'
   cache:

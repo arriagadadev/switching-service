@@ -1,83 +1,26 @@
 <template>
-  <q-page class="q-pa-md">
-    <q-btn
-      flat
-      icon="arrow_back"
-      label="Volver"
-      @click="$router.push('/schedules')"
-      class="q-mb-md"
-    />
-    <div v-if="loading" class="text-center">
-      <q-spinner color="primary" size="3em" />
+  <div class="page">
+    <router-link to="/schedules" class="back-link">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Volver
+    </router-link>
+    <div v-if="loading" class="loading">Cargando...</div>
+    <div v-else-if="schedule" class="card">
+      <h1>{{ schedule.name }}</h1>
+      <dl class="detail-list">
+        <div><dt>ID</dt><dd>{{ schedule.id }}</dd></div>
+        <div><dt>Expresión Cron</dt><dd>{{ schedule.cron }}</dd></div>
+        <div><dt>Estado Deseado</dt><dd><span class="chip" :class="schedule.desiredState === 1 ? 'success' : 'error'">{{ schedule.desiredState === 1 ? 'Activo' : 'Inactivo' }}</span></dd></div>
+        <div><dt>Habilitado</dt><dd><span class="chip" :class="schedule.isEnabled ? 'success' : 'error'">{{ schedule.isEnabled ? 'Sí' : 'No' }}</span></dd></div>
+        <div><dt>Activo</dt><dd><span class="chip" :class="schedule.isActive ? 'success' : 'error'">{{ schedule.isActive ? 'Sí' : 'No' }}</span></dd></div>
+      </dl>
+      <h3>Recursos Asociados</h3>
+      <ul v-if="schedule.resources.length" class="resource-list">
+        <li v-for="r in schedule.resources" :key="r.id">{{ r.resourceIdentifier }} ({{ r.type }})</li>
+      </ul>
+      <p v-else class="empty">No hay recursos asociados</p>
     </div>
-    <div v-else-if="schedule">
-      <div class="text-h4 q-mb-md">{{ schedule.name }}</div>
-      <q-card>
-        <q-card-section>
-          <div class="row q-gutter-md">
-            <div class="col-12 col-md-6">
-              <q-list>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>ID</q-item-label>
-                    <q-item-label>{{ schedule.id }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Expresión Cron</q-item-label>
-                    <q-item-label>{{ schedule.cron }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Estado Deseado</q-item-label>
-                    <q-item-label>
-                      <q-badge :color="schedule.desiredState === 1 ? 'positive' : 'negative'">
-                        {{ schedule.desiredState === 1 ? 'Activo' : 'Inactivo' }}
-                      </q-badge>
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Habilitado</q-item-label>
-                    <q-item-label>
-                      <q-badge :color="schedule.isEnabled ? 'positive' : 'negative'">
-                        {{ schedule.isEnabled ? 'Sí' : 'No' }}
-                      </q-badge>
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Activo</q-item-label>
-                    <q-item-label>
-                      <q-badge :color="schedule.isActive ? 'positive' : 'negative'">
-                        {{ schedule.isActive ? 'Sí' : 'No' }}
-                      </q-badge>
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </div>
-            <div class="col-12 col-md-6">
-              <div class="text-h6 q-mb-sm">Recursos Asociados</div>
-              <q-list v-if="schedule.resources.length > 0">
-                <q-item v-for="resource in schedule.resources" :key="resource.id">
-                  <q-item-section>
-                    <q-item-label>{{ resource.resourceIdentifier }}</q-item-label>
-                    <q-item-label caption>{{ resource.type }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-              <div v-else class="text-grey">No hay recursos asociados</div>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-    </div>
-  </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -90,18 +33,27 @@ const route = useRoute();
 const loading = ref(false);
 const schedule = ref<ScheduleResource | null>(null);
 
-const loadSchedule = async () => {
+onMounted(async () => {
   loading.value = true;
   try {
     schedule.value = await schedulesService.getById(route.params.id as string);
-  } catch (error) {
-    console.error('Error al cargar la programación:', error);
+  } catch (e) {
+    console.error(e);
   } finally {
     loading.value = false;
   }
-};
-
-onMounted(() => {
-  loadSchedule();
 });
 </script>
+
+<style scoped>
+.back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--primary); margin-bottom: 16px; }
+.detail-list { display: grid; gap: 12px; }
+.detail-list div { display: flex; gap: 12px; }
+.detail-list dt { margin: 0; color: var(--text-tertiary); font-weight: 500; min-width: 120px; }
+.detail-list dd { margin: 0; }
+.chip { padding: 4px 8px; border-radius: 4px; font-size: 0.875rem; }
+.chip.success { background: var(--success); color: white; }
+.chip.error { background: var(--error); color: white; }
+.resource-list { padding-left: 20px; }
+.empty { color: var(--text-tertiary); }
+</style>

@@ -1,20 +1,26 @@
-# Switching Service Frontend
+# Switching Service - Frontend
 
-Frontend Vue 3 + Quasar para el servicio de switching de recursos AWS.
+Frontend Vue 3 + Vite para el Switching Service. Autenticación con AWS Cognito.
 
-## Configuración
+## Requisitos
 
-1. Instalar dependencias:
+- Node.js 18+
+- npm 9+
+
+## Instalación
+
 ```bash
 npm install
 ```
 
-2. Configurar variables de entorno:
+## Variables de entorno
+
 Copia `.env.example` a `.env` y configura:
-- `VITE_COGNITO_USER_POOL_ID`: ID del User Pool de Cognito
-- `VITE_COGNITO_USER_POOL_CLIENT_ID`: ID del Client de Cognito
-- `VITE_AWS_REGION`: Región de AWS (default: us-east-1)
-- `VITE_API_ENDPOINT`: URL base de la API
+
+- `VITE_AWS_REGION` - Región AWS (ej: us-east-1)
+- `VITE_COGNITO_USER_POOL_ID` - ID del User Pool de Cognito
+- `VITE_COGNITO_USER_POOL_CLIENT_ID` - ID del Client de Cognito
+- `VITE_API_ENDPOINT` - URL base de la API (sin /api)
 
 ## Desarrollo
 
@@ -22,12 +28,10 @@ Copia `.env.example` a `.env` y configura:
 npm run dev
 ```
 
-## Build para producción
+## Build
 
 ```bash
 npm run build
 ```
 
-## Despliegue en Amplify
-
-El frontend está configurado para desplegarse en AWS Amplify. Las variables de entorno deben configurarse en la consola de Amplify.
+La salida se genera en `dist/`.

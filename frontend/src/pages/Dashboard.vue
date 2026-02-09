@@ -1,379 +1,180 @@
 <template>
-  <q-page class="dashboard-page">
-    <div class="row items-center justify-between q-mb-md">
-      <div class="text-h4">Dashboard</div>
-      <q-btn
-        flat
-        dense
-        round
-        icon="refresh"
-        @click="loadData"
-        :loading="loading"
-        class="q-mr-sm"
-      >
-        <q-tooltip>Actualizar datos</q-tooltip>
-      </q-btn>
+  <div class="page">
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <button class="btn-icon" @click="loadData" :disabled="loading" title="Actualizar">
+        <span class="material-symbols-outlined">{{ loading ? 'refresh' : 'refresh' }}</span>
+      </button>
     </div>
 
-    <!-- KPI: 4 cards en fila compacta -->
-    <div class="row dashboard-stats q-col-gutter-sm q-mb-md">
-      <q-card class="col-6 col-md-3 stat-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="row items-center no-wrap">
-            <q-icon name="storage" size="32px" color="primary" class="q-mr-sm" />
-            <div>
-              <div class="text-caption text-grey-7">Total Recursos</div>
-              <div class="text-h5 text-primary">{{ resourcesCount }}</div>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <q-card class="col-6 col-md-3 stat-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="row items-center no-wrap">
-            <q-icon name="check_circle" size="32px" color="positive" class="q-mr-sm" />
-            <div>
-              <div class="text-caption text-grey-7">Recursos Activos</div>
-              <div class="text-h5 text-positive">{{ activeResourcesCount }}</div>
-              <div class="text-caption text-grey-6">{{ activeResourcesPercentage }}%</div>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <q-card class="col-6 col-md-3 stat-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="row items-center no-wrap">
-            <q-icon name="schedule" size="32px" color="primary" class="q-mr-sm" />
-            <div>
-              <div class="text-caption text-grey-7">Total Programaciones</div>
-              <div class="text-h5 text-primary">{{ schedulesCount }}</div>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <q-card class="col-6 col-md-3 stat-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="row items-center no-wrap">
-            <q-icon name="play_circle" size="32px" color="positive" class="q-mr-sm" />
-            <div>
-              <div class="text-caption text-grey-7">Programaciones Activas</div>
-              <div class="text-h5 text-positive">{{ activeSchedulesCount }}</div>
-              <div class="text-caption text-grey-6">{{ activeSchedulesPercentage }}%</div>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="material-symbols-outlined stat-icon primary">storage</span>
+        <div>
+          <span class="stat-label">Total Recursos</span>
+          <span class="stat-value">{{ resourcesCount }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="material-symbols-outlined stat-icon success">check_circle</span>
+        <div>
+          <span class="stat-label">Recursos Activos</span>
+          <span class="stat-value">{{ activeResourcesCount }}</span>
+          <span class="stat-sub">{{ activeResourcesPercentage }}%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="material-symbols-outlined stat-icon primary">schedule</span>
+        <div>
+          <span class="stat-label">Total Programaciones</span>
+          <span class="stat-value">{{ schedulesCount }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="material-symbols-outlined stat-icon success">play_circle</span>
+        <div>
+          <span class="stat-label">Programaciones Activas</span>
+          <span class="stat-value">{{ activeSchedulesCount }}</span>
+          <span class="stat-sub">{{ activeSchedulesPercentage }}%</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Gráficos: lado a lado -->
-    <div class="row dashboard-charts q-col-gutter-sm q-mb-md">
-      <q-card class="col-12 col-md-6 chart-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="text-subtitle1 q-mb-sm">Recursos por Tipo</div>
-          <div v-if="loading" class="text-center q-pa-md">
-            <q-spinner color="primary" size="2em" />
-          </div>
-          <div v-else class="type-distribution">
-            <div v-for="type in resourceTypesDistribution" :key="type.type" class="row items-center q-mb-sm">
-              <div class="col-auto q-mr-sm">
-                <q-chip
-                  :color="type.type === 'RDS' ? 'info' : 'secondary'"
-                  text-color="white"
-                  :icon="type.type === 'RDS' ? 'storage' : 'computer'"
-                  dense
-                >
-                  {{ type.type }}
-                </q-chip>
-              </div>
-              <div class="col">
-                <q-linear-progress
-                  :value="type.percentage / 100"
-                  :color="type.type === 'RDS' ? 'info' : 'secondary'"
-                  size="20px"
-                  class="rounded-borders"
-                >
-                  <div class="absolute-full flex flex-center">
-                    <span class="progress-label">{{ type.count }} ({{ type.percentage }}%)</span>
-                  </div>
-                </q-linear-progress>
-              </div>
-            </div>
-            <div v-if="resourceTypesDistribution.length === 0" class="text-center text-grey-6 q-pa-sm">
-              No hay recursos
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <q-card class="col-12 col-md-6 chart-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="text-subtitle1 q-mb-sm">Estado de Recursos</div>
-          <div v-if="loading" class="text-center q-pa-md">
-            <q-spinner color="primary" size="2em" />
-          </div>
-          <div v-else class="state-distribution">
-            <div class="row items-center justify-around">
-              <div class="col-auto text-center">
-                <q-circular-progress
-                  :value="activeResourcesPercentage / 100"
-                  size="80px"
-                  :thickness="0.25"
-                  color="positive"
-                  track-color="grey-8"
-                  class="state-circle"
-                >
-                  <div class="column items-center justify-center">
-                    <span class="text-h6">{{ activeResourcesCount }}</span>
-                    <span class="text-caption text-grey-7">Activos</span>
-                  </div>
-                </q-circular-progress>
-              </div>
-              <div class="col-auto text-center">
-                <q-circular-progress
-                  :value="inactiveResourcesPercentage / 100"
-                  size="80px"
-                  :thickness="0.25"
-                  color="negative"
-                  track-color="grey-8"
-                  class="state-circle"
-                >
-                  <div class="column items-center justify-center">
-                    <span class="text-h6">{{ inactiveResourcesCount }}</span>
-                    <span class="text-caption text-grey-7">Inactivos</span>
-                  </div>
-                </q-circular-progress>
+    <div class="charts-grid">
+      <div class="card">
+        <h3>Recursos por Tipo</h3>
+        <div v-if="loading" class="loading">Cargando...</div>
+        <div v-else class="type-list">
+          <div v-for="type in resourceTypesDistribution" :key="type.type" class="type-row">
+            <span class="chip" :class="type.type === 'RDS' ? 'info' : 'secondary'">{{ type.type }}</span>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: type.percentage + '%', backgroundColor: type.type === 'RDS' ? 'var(--info)' : '#757575' }">
+                <span>{{ type.count }} ({{ type.percentage }}%)</span>
               </div>
             </div>
           </div>
-        </q-card-section>
-      </q-card>
+          <p v-if="resourceTypesDistribution.length === 0" class="empty">No hay recursos</p>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Estado de Recursos</h3>
+        <div v-if="loading" class="loading">Cargando...</div>
+        <div v-else class="state-circles">
+          <div class="state-item">
+            <div class="circle" :style="{ '--percent': activeResourcesPercentage }">
+              <span class="circle-value">{{ activeResourcesCount }}</span>
+              <span class="circle-label">Activos</span>
+            </div>
+          </div>
+          <div class="state-item">
+            <div class="circle error" :style="{ '--percent': inactiveResourcesPercentage }">
+              <span class="circle-value">{{ inactiveResourcesCount }}</span>
+              <span class="circle-label">Inactivos</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Tablas: lado a lado, mejor uso del espacio -->
-    <div class="row dashboard-tables q-col-gutter-sm">
-      <q-card class="col-12 col-md-6 table-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="row items-center justify-between q-mb-sm">
-            <div class="text-subtitle1">Recursos Recientes</div>
-            <q-btn
-              flat
-              dense
-              size="sm"
-              label="Ver todos"
-              icon-right="arrow_forward"
-              color="primary"
-              @click="$router.push({ name: 'resources' })"
-            />
-          </div>
-          <q-table
-            :rows="recentResources"
-            :columns="resourceColumns"
-            row-key="id"
-            :loading="loading"
-            flat
-            dense
-            hide-pagination
-            :rows-per-page-options="[0]"
-            class="dashboard-table"
-          >
-            <template v-slot:body-cell-state="props">
-              <q-td :props="props">
-                <q-chip
-                  :color="props.value === 1 ? 'positive' : 'negative'"
-                  text-color="white"
-                  size="sm"
-                  :icon="props.value === 1 ? 'check_circle' : 'cancel'"
-                >
-                  {{ props.value === 1 ? 'Activo' : 'Inactivo' }}
-                </q-chip>
-              </q-td>
-            </template>
-            <template v-slot:body-cell-actions="props">
-              <q-td :props="props">
-                <q-btn
-                  flat
-                  dense
-                  round
-                  :icon="props.row.state === 0 ? 'play_arrow' : 'stop'"
-                  :color="props.row.state === 0 ? 'positive' : 'negative'"
-                  @click="props.row.state === 0 ? startResource(props.row.id) : stopResource(props.row.id)"
-                  size="sm"
-                >
-                  <q-tooltip>
-                    {{ props.row.state === 0 ? 'Iniciar' : 'Detener' }}
-                  </q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="visibility"
-                  color="primary"
-                  @click="$router.push({ name: 'resources' })"
-                  size="sm"
-                  class="q-ml-xs"
-                >
-                  <q-tooltip>Ver recurso</q-tooltip>
-                </q-btn>
-              </q-td>
-            </template>
-            <template v-slot:no-data>
-              <div class="full-width row flex-center text-grey q-pa-sm">
-                <span>No hay recursos</span>
-              </div>
-            </template>
-          </q-table>
-        </q-card-section>
-      </q-card>
-
-      <q-card class="col-12 col-md-6 table-card" flat bordered>
-        <q-card-section class="q-pa-md">
-          <div class="row items-center justify-between q-mb-sm">
-            <div class="text-subtitle1">Programaciones Recientes</div>
-            <q-btn
-              flat
-              dense
-              size="sm"
-              label="Ver todos"
-              icon-right="arrow_forward"
-              color="primary"
-              @click="$router.push({ name: 'schedules' })"
-            />
-          </div>
-          <q-table
-            :rows="recentSchedules"
-            :columns="scheduleColumns"
-            row-key="id"
-            :loading="loading"
-            flat
-            dense
-            hide-pagination
-            :rows-per-page-options="[0]"
-            class="dashboard-table"
-          >
-            <template v-slot:body-cell-isEnabled="props">
-              <q-td :props="props">
-                <q-chip
-                  :color="props.value ? 'positive' : 'negative'"
-                  text-color="white"
-                  size="sm"
-                  :icon="props.value ? 'check_circle' : 'cancel'"
-                >
-                  {{ props.value ? 'Habilitada' : 'Deshabilitada' }}
-                </q-chip>
-              </q-td>
-            </template>
-            <template v-slot:body-cell-actions="props">
-              <q-td :props="props">
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="visibility"
-                  color="primary"
-                  @click="$router.push({ name: 'schedules' })"
-                  size="sm"
-                >
-                  <q-tooltip>Ver detalle</q-tooltip>
-                </q-btn>
-              </q-td>
-            </template>
-            <template v-slot:no-data>
-              <div class="full-width row flex-center text-grey q-pa-sm">
-                <span>No hay programaciones</span>
-              </div>
-            </template>
-          </q-table>
-        </q-card-section>
-      </q-card>
+    <div class="tables-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3>Recursos Recientes</h3>
+          <router-link to="/resources" class="btn-link">Ver todos</router-link>
+        </div>
+        <div class="table-wrap">
+          <table v-if="recentResources.length" class="data-table">
+            <thead>
+              <tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in recentResources" :key="r.id">
+                <td>{{ r.name }}</td>
+                <td><span class="chip info">{{ r.type }}</span></td>
+                <td><span class="chip" :class="r.state === 1 ? 'success' : 'error'">{{ r.state === 1 ? 'Activo' : 'Inactivo' }}</span></td>
+                <td>
+                  <button class="btn-icon" @click="r.state === 0 ? startResource(r.id) : stopResource(r.id)" title="Iniciar/Detener">
+                    <span class="material-symbols-outlined">{{ r.state === 0 ? 'play_arrow' : 'stop' }}</span>
+                  </button>
+                  <router-link to="/resources" class="btn-icon"><span class="material-symbols-outlined">visibility</span></router-link>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else class="empty">No hay recursos</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Programaciones Recientes</h3>
+          <router-link to="/schedules" class="btn-link">Ver todos</router-link>
+        </div>
+        <div class="table-wrap">
+          <table v-if="recentSchedules.length" class="data-table">
+            <thead>
+              <tr><th>Nombre</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in recentSchedules" :key="s.id">
+                <td>{{ s.name }}</td>
+                <td><span class="chip" :class="s.isEnabled ? 'success' : 'error'">{{ s.isEnabled ? 'Habilitada' : 'Deshabilitada' }}</span></td>
+                <td><router-link to="/schedules" class="btn-icon"><span class="material-symbols-outlined">visibility</span></router-link></td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else class="empty">No hay programaciones</p>
+        </div>
+      </div>
     </div>
-  </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useQuasar } from 'quasar';
 import { resourcesService } from '../services/resources';
 import { schedulesService } from '../services/schedules';
+import { useToast } from '../composables/useToast';
 import type { ResourceStateResource, ScheduleResource } from '../types';
 
-const $q = useQuasar();
+const toast = useToast();
 const loading = ref(false);
 const resources = ref<ResourceStateResource[]>([]);
 const schedules = ref<ScheduleResource[]>([]);
 
 const resourcesCount = computed(() => resources.value.length);
-const activeResourcesCount = computed(() =>
-  resources.value.filter((r) => r.state === 1).length
-);
-const inactiveResourcesCount = computed(() =>
-  resources.value.filter((r) => r.state === 0).length
-);
+const activeResourcesCount = computed(() => resources.value.filter((r) => r.state === 1).length);
+const inactiveResourcesCount = computed(() => resources.value.filter((r) => r.state === 0).length);
 const activeResourcesPercentage = computed(() =>
-  resourcesCount.value > 0
-    ? Math.round((activeResourcesCount.value / resourcesCount.value) * 100)
-    : 0
+  resourcesCount.value > 0 ? Math.round((activeResourcesCount.value / resourcesCount.value) * 100) : 0
 );
 const inactiveResourcesPercentage = computed(() =>
-  resourcesCount.value > 0
-    ? Math.round((inactiveResourcesCount.value / resourcesCount.value) * 100)
-    : 0
+  resourcesCount.value > 0 ? Math.round((inactiveResourcesCount.value / resourcesCount.value) * 100) : 0
 );
 
 const schedulesCount = computed(() => schedules.value.length);
-const activeSchedulesCount = computed(() =>
-  schedules.value.filter((s) => s.isEnabled && s.isActive).length
-);
+const activeSchedulesCount = computed(() => schedules.value.filter((s) => s.isEnabled && s.isActive).length);
 const activeSchedulesPercentage = computed(() =>
-  schedulesCount.value > 0
-    ? Math.round((activeSchedulesCount.value / schedulesCount.value) * 100)
-    : 0
+  schedulesCount.value > 0 ? Math.round((activeSchedulesCount.value / schedulesCount.value) * 100) : 0
 );
 
 const recentResources = computed(() =>
-  resources.value
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 5)
+  [...resources.value].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5)
 );
-
 const recentSchedules = computed(() =>
-  schedules.value
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 5)
+  [...schedules.value].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5)
 );
 
 const resourceTypesDistribution = computed(() => {
-  const distribution: Record<string, number> = {};
-  resources.value.forEach((r) => {
-    distribution[r.type] = (distribution[r.type] || 0) + 1;
-  });
-
-  return Object.entries(distribution)
+  const dist: Record<string, number> = {};
+  resources.value.forEach((r) => { dist[r.type] = (dist[r.type] || 0) + 1; });
+  return Object.entries(dist)
     .map(([type, count]) => ({
       type,
       count,
-      percentage: resourcesCount.value > 0
-        ? Math.round((count / resourcesCount.value) * 100)
-        : 0,
+      percentage: resourcesCount.value > 0 ? Math.round((count / resourcesCount.value) * 100) : 0,
     }))
     .sort((a, b) => b.count - a.count);
 });
-
-const resourceColumns = [
-  { name: 'name', label: 'Nombre', field: 'name', align: 'left' },
-  { name: 'type', label: 'Tipo', field: 'type', align: 'left' },
-  { name: 'state', label: 'Estado', field: 'state', align: 'center' },
-  { name: 'actions', label: 'Acciones', align: 'center' },
-];
-
-const scheduleColumns = [
-  { name: 'name', label: 'Nombre', field: 'name', align: 'left' },
-  { name: 'isEnabled', label: 'Estado', field: 'isEnabled', align: 'center' },
-  { name: 'actions', label: 'Acciones', align: 'center' },
-];
 
 const loadData = async () => {
   loading.value = true;
@@ -382,12 +183,8 @@ const loadData = async () => {
       resourcesService.getAll(),
       schedulesService.getAll(),
     ]);
-  } catch (error: any) {
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Error al cargar los datos',
-      position: 'top',
-    });
+  } catch (e: any) {
+    toast.error(e.message || 'Error al cargar');
   } finally {
     loading.value = false;
   }
@@ -396,75 +193,107 @@ const loadData = async () => {
 const startResource = async (id: string) => {
   try {
     await resourcesService.start(id);
-    $q.notify({
-      type: 'positive',
-      message: 'Recurso iniciado',
-      position: 'top',
-      icon: 'play_arrow',
-    });
-    await loadData();
-  } catch (error: any) {
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Error al iniciar el recurso',
-      position: 'top',
-    });
+    toast.success('Recurso iniciado');
+    loadData();
+  } catch (e: any) {
+    toast.error(e.message || 'Error');
   }
 };
 
 const stopResource = async (id: string) => {
   try {
     await resourcesService.stop(id);
-    $q.notify({
-      type: 'positive',
-      message: 'Recurso detenido',
-      position: 'top',
-      icon: 'stop',
-    });
-    await loadData();
-  } catch (error: any) {
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Error al detener el recurso',
-      position: 'top',
-    });
+    toast.success('Recurso detenido');
+    loadData();
+  } catch (e: any) {
+    toast.error(e.message || 'Error');
   }
 };
 
-onMounted(() => {
-  loadData();
-});
+onMounted(() => loadData());
 </script>
 
 <style scoped>
-.dashboard-page {
+.page { padding: 0; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.page-header h1 { margin: 0; font-size: 1.5rem; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
   padding: 16px;
-  width: 100%;
-  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.dashboard-stats .stat-card,
-.dashboard-charts .chart-card,
-.dashboard-tables .table-card {
-  min-width: 0;
+.stat-icon { font-size: 32px; }
+.stat-icon.primary { color: var(--primary); }
+.stat-icon.success { color: var(--success); }
+.stat-label { display: block; font-size: 0.75rem; color: var(--text-tertiary); }
+.stat-value { font-size: 1.25rem; font-weight: 600; }
+.stat-sub { font-size: 0.75rem; color: var(--text-tertiary); margin-left: 4px; }
+
+.charts-grid, .tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.dashboard-table :deep(.q-table__middle) {
-  max-height: 240px;
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
 }
 
-.state-circle :deep(.q-circular-progress__text) {
-  color: inherit;
-}
+.card h3 { margin: 0 0 12px; font-size: 1rem; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-header h3 { margin: 0; }
+.btn-link { color: var(--primary); font-size: 0.875rem; }
 
-.type-distribution .q-linear-progress {
-  border-radius: 4px;
-}
+.type-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.type-row .chip { flex-shrink: 0; }
+.progress-bar { flex: 1; height: 20px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; font-weight: 600; }
 
-.progress-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+.state-circles { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+.state-item { text-align: center; }
+.circle {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: conic-gradient(var(--success) calc(var(--percent) * 1%), var(--bg-tertiary) 0);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0 auto 8px;
 }
+.circle.error { background: conic-gradient(var(--error) calc(var(--percent) * 1%), var(--bg-tertiary) 0); }
+.circle-value { font-size: 1.25rem; font-weight: 600; }
+.circle-label { font-size: 0.75rem; color: var(--text-tertiary); }
+
+.chip {
+  display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;
+}
+.chip.info { background: var(--info); color: white; }
+.chip.success { background: var(--success); color: white; }
+.chip.error { background: var(--error); color: white; }
+.chip.secondary { background: #757575; color: white; }
+
+.table-wrap { max-height: 200px; overflow-y: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
+.data-table th { font-size: 0.75rem; color: var(--text-tertiary); }
+
+.btn-icon {
+  background: none; color: var(--text-secondary); padding: 4px;
+}
+.btn-icon:hover { color: var(--primary); }
+.loading, .empty { text-align: center; color: var(--text-tertiary); padding: 24px; margin: 0; }
 </style>

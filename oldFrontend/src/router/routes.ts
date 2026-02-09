@@ -1,38 +1,38 @@
-import type { RouteRecordRaw } from 'vue-router';
+import { RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: () => import('../layouts/MainLayout.vue'),
+    component: () => import('layouts/MainLayout.vue'),
     children: [
       {
         path: '',
         name: 'dashboard',
-        component: () => import('../pages/Dashboard.vue'),
+        component: () => import('pages/Dashboard.vue'),
         meta: { requiresAuth: true },
       },
       {
         path: 'resources',
         name: 'resources',
-        component: () => import('../pages/Resources.vue'),
+        component: () => import('pages/Resources.vue'),
         meta: { requiresAuth: true },
       },
       {
         path: 'schedules',
         name: 'schedules',
-        component: () => import('../pages/Schedules.vue'),
+        component: () => import('pages/Schedules.vue'),
         meta: { requiresAuth: true },
       },
       {
         path: 'schedules/:id',
         name: 'schedule-detail',
-        component: () => import('../pages/ScheduleDetail.vue'),
+        component: () => import('pages/ScheduleDetail.vue'),
         meta: { requiresAuth: true },
       },
       {
         path: 'change-password',
         name: 'change-password',
-        component: () => import('../pages/ChangePassword.vue'),
+        component: () => import('pages/ChangePassword.vue'),
         meta: { requiresAuth: true },
       },
     ],
@@ -40,11 +40,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('../pages/Login.vue'),
+    component: () => import('pages/Login.vue'),
   },
   {
-    path: '/:pathMatch(.*)*',
-    component: () => import('../pages/Error404.vue'),
+    path: '/:catchAll(.*)*',
+    component: () => import('pages/Error404.vue'),
   },
 ];
 

@@ -1,508 +1,148 @@
 <template>
-  <q-page class="q-pa-md">
-    <!-- Header con acciones -->
-    <div class="row items-center justify-between q-mb-lg">
+  <div class="page">
+    <div class="page-header">
       <div>
-        <div class="text-h4 q-mb-xs">Programaciones</div>
-        <div class="text-caption text-grey-7">
-          Gestiona las programaciones automáticas de tus recursos
-        </div>
+        <h1>Programaciones</h1>
+        <p class="subtitle">Gestiona las programaciones automáticas de tus recursos</p>
       </div>
-      <q-btn
-        color="primary"
-        icon="add"
-        label="Nueva Programación"
-        @click="showCreateDialog = true"
-        unelevated
-        class="q-px-md"
-      />
+      <button class="btn btn-primary" @click="openCreate">
+        <span class="material-symbols-outlined">add</span>
+        Nueva Programación
+      </button>
     </div>
 
-    <!-- Filtros y búsqueda -->
-    <q-card class="q-mb-md" flat bordered>
-      <q-card-section class="q-pa-md">
-        <div class="row q-gutter-md items-end">
-          <div class="col-12 col-md-4">
-            <q-input
-              v-model="filter"
-              placeholder="Buscar por nombre o cron..."
-              outlined
-              dense
-              clearable
-            >
-              <template v-slot:prepend>
-                <q-icon name="search" />
-              </template>
-            </q-input>
-          </div>
-          <div class="col-12 col-md-2">
-            <q-select
-              v-model="filterEnabled"
-              :options="enabledFilterOptions"
-              label="Estado"
-              outlined
-              dense
-              clearable
-              emit-value
-              map-options
-            />
-          </div>
-          <div class="col-12 col-md-2">
-            <q-btn
-              flat
-              label="Limpiar"
-              icon="clear_all"
-              @click="clearFilters"
-              :disable="!hasActiveFilters"
-            />
-          </div>
+    <div class="filters card">
+      <div class="filter-row">
+        <div class="search-wrap">
+          <span class="material-symbols-outlined">search</span>
+          <input v-model="filter" placeholder="Buscar por nombre o cron..." />
         </div>
-      </q-card-section>
-    </q-card>
+        <select v-model="filterEnabled" class="select">
+          <option :value="null">Estado: Todos</option>
+          <option :value="true">Habilitadas</option>
+          <option :value="false">Deshabilitadas</option>
+        </select>
+        <button class="btn btn-secondary" @click="clearFilters" :disabled="!hasActiveFilters">Limpiar</button>
+      </div>
+    </div>
 
-    <!-- Tabla de programaciones -->
-    <q-card flat bordered>
-      <q-table
-        :rows="filteredSchedules"
-        :columns="columns"
-        row-key="id"
-        :loading="loading"
-        :pagination="pagination"
-        @request="onRequest"
-        flat
-        class="sticky-header-table"
-      >
-        <template v-slot:top>
-          <div class="text-h6">Lista de Programaciones</div>
-          <q-space />
-          <q-btn
-            flat
-            round
-            dense
-            icon="refresh"
-            @click="loadSchedules"
-            :loading="loading"
-          />
-        </template>
+    <div class="card">
+      <div class="table-header">
+        <h3>Lista de Programaciones</h3>
+        <button class="btn-icon" @click="loadSchedules" :disabled="loading"><span class="material-symbols-outlined">refresh</span></button>
+      </div>
+      <div class="table-wrap">
+        <table v-if="filteredSchedules.length" class="data-table">
+          <thead>
+            <tr><th>Nombre</th><th>Cron</th><th>Estado Deseado</th><th>Recursos</th><th>Habilitado</th><th>Activo</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="s in paginatedSchedules" :key="s.id">
+              <td>{{ s.name }}</td>
+              <td class="mono">{{ s.cron }}</td>
+              <td><span class="chip" :class="s.desiredState === 1 ? 'success' : 'error'">{{ s.desiredState === 1 ? 'Activar' : 'Desactivar' }}</span></td>
+              <td>
+                <span v-for="r in s.resources.slice(0, 2)" :key="r.id" class="chip info">{{ r.resourceIdentifier.split('/').pop() || r.resourceIdentifier }}</span>
+                <span v-if="s.resources.length > 2" class="chip">+{{ s.resources.length - 2 }}</span>
+              </td>
+              <td>
+                <label class="toggle">
+                  <input type="checkbox" :checked="s.isEnabled" @change="(e) => toggleSchedule(s, (e.target as HTMLInputElement).checked)" />
+                  <span class="slider"></span>
+                </label>
+              </td>
+              <td><span class="chip" :class="s.isActive ? 'success' : 'error'">{{ s.isActive ? 'Sí' : 'No' }}</span></td>
+              <td>
+                <router-link :to="`/schedules/${s.id}`" class="btn-icon"><span class="material-symbols-outlined">visibility</span></router-link>
+                <button class="btn-icon" @click="editSchedule(s)"><span class="material-symbols-outlined">edit</span></button>
+                <button class="btn-icon danger" @click="confirmDelete(s)"><span class="material-symbols-outlined">delete</span></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-else class="empty">No hay programaciones disponibles</p>
+      </div>
+      <div v-if="totalPages > 1" class="pagination">
+        <button @click="page = Math.max(1, page - 1)" :disabled="page <= 1">Anterior</button>
+        <span>Página {{ page }} de {{ totalPages }}</span>
+        <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages">Siguiente</button>
+      </div>
+    </div>
 
-        <template v-slot:body-cell-isEnabled="props">
-          <q-td :props="props">
-            <q-toggle
-              :model-value="props.value"
-              @update:model-value="toggleSchedule(props.row.id, $event)"
-              color="positive"
-              :disable="toggleLoading[props.row.id]"
-            />
-          </q-td>
-        </template>
+    <Modal v-model="showModal" :title="editingSchedule ? 'Editar Programación' : 'Nueva Programación'" width="600px">
+      <form @submit.prevent="saveSchedule" class="form">
+        <div class="field">
+          <label>Nombre *</label>
+          <input v-model="scheduleForm.name" required />
+        </div>
+        <div class="field">
+          <label>Expresión Cron * <button type="button" class="link" @click="showCronHelp = true">Ayuda</button></label>
+          <input v-model="scheduleForm.cron" required placeholder="0 9 * * ? *" />
+          <span class="hint">Formato: segundo minuto hora día mes día-semana año</span>
+        </div>
+        <div class="field">
+          <label>Estado Deseado *</label>
+          <select v-model="scheduleForm.desiredState" required>
+            <option :value="1">Activar</option>
+            <option :value="0">Desactivar</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Recursos *</label>
+          <select v-model="selectedResourceIds" multiple size="5">
+            <option v-for="r in availableResources" :key="r.id" :value="r.id">{{ r.name }} ({{ r.type }})</option>
+          </select>
+          <span class="hint">Ctrl+clic para selección múltiple</span>
+        </div>
+        <div class="field checkbox">
+          <label><input type="checkbox" v-model="scheduleForm.isEnabled" /> Habilitar programación</label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" @click="showModal = false">Cancelar</button>
+          <button type="button" class="btn btn-primary" :disabled="saving" @click="saveSchedule">{{ saving ? 'Guardando...' : 'Guardar' }}</button>
+        </div>
+      </form>
+    </Modal>
 
-        <template v-slot:body-cell-isActive="props">
-          <q-td :props="props">
-            <q-chip
-              :color="props.value ? 'positive' : 'negative'"
-              text-color="white"
-              :icon="props.value ? 'check_circle' : 'cancel'"
-            >
-              {{ props.value ? 'Activo' : 'Inactivo' }}
-            </q-chip>
-          </q-td>
-        </template>
+    <Modal v-model="showCronHelp" title="Ayuda Cron" width="500px">
+      <p><strong>Formato:</strong> <code>segundo minuto hora día mes día-semana año</code></p>
+      <p><strong>Ejemplos:</strong></p>
+      <ul>
+        <li><code>0 9 * * ? *</code> - Todos los días a las 9:00 AM</li>
+        <li><code>0 0 1 * ? *</code> - Primer día de cada mes a medianoche</li>
+        <li><code>0 0/30 * * ? *</code> - Cada 30 minutos</li>
+        <li><code>0 0 9 ? * MON-FRI *</code> - Lunes a viernes a las 9:00 AM</li>
+      </ul>
+    </Modal>
 
-        <template v-slot:body-cell-desiredState="props">
-          <q-td :props="props">
-            <q-chip
-              :color="props.value === 1 ? 'positive' : 'negative'"
-              text-color="white"
-              size="sm"
-            >
-              {{ props.value === 1 ? 'Activar' : 'Desactivar' }}
-            </q-chip>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-cron="props">
-          <q-td :props="props">
-            <div class="row items-center q-gutter-xs">
-              <q-icon name="schedule" size="sm" color="primary" />
-              <span class="text-body2">{{ props.value }}</span>
-            </div>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-resources="props">
-          <q-td :props="props">
-            <div class="q-gutter-xs">
-              <q-chip
-                v-for="(resource, idx) in props.value"
-                :key="idx"
-                color="info"
-                text-color="white"
-                size="sm"
-                :label="resource.resourceIdentifier.split('/').pop() || resource.resourceIdentifier"
-              >
-                <q-tooltip>{{ resource.resourceIdentifier }}</q-tooltip>
-              </q-chip>
-              <span v-if="props.value.length === 0" class="text-grey-6 text-caption">
-                Sin recursos
-              </span>
-            </div>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-actions="props">
-          <q-td :props="props">
-            <q-btn-group flat>
-              <q-btn
-                flat
-                dense
-                round
-                icon="visibility"
-                color="primary"
-                @click="viewSchedule(props.row)"
-                size="sm"
-              >
-                <q-tooltip>Ver detalles</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                icon="edit"
-                color="primary"
-                @click="editSchedule(props.row)"
-                size="sm"
-              >
-                <q-tooltip>Editar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                icon="delete"
-                color="negative"
-                @click="confirmDelete(props.row)"
-                size="sm"
-              >
-                <q-tooltip>Eliminar</q-tooltip>
-              </q-btn>
-            </q-btn-group>
-          </q-td>
-        </template>
-
-        <template v-slot:no-data>
-          <div class="full-width row flex-center text-grey q-gutter-sm q-pa-lg">
-            <q-icon name="schedule" size="2em" />
-            <span>No hay programaciones disponibles</span>
-          </div>
-        </template>
-      </q-table>
-    </q-card>
-
-    <!-- Dialog para crear/editar programación -->
-    <q-dialog v-model="showCreateDialog" persistent>
-      <q-card style="min-width: 700px; max-width: 900px">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">
-            {{ editingSchedule ? 'Editar Programación' : 'Nueva Programación' }}
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup @click="resetForm" />
-        </q-card-section>
-
-        <q-card-section class="q-pt-md">
-          <q-form @submit="saveSchedule" class="q-gutter-md" ref="scheduleFormRef">
-            <q-input
-              v-model="scheduleForm.name"
-              label="Nombre *"
-              :rules="[(val) => !!val || 'Nombre es requerido']"
-              outlined
-              hint="Nombre descriptivo para la programación"
-            />
-
-            <div>
-              <q-input
-                v-model="scheduleForm.cron"
-                label="Expresión Cron *"
-                :rules="[(val) => !!val || 'Cron es requerido']"
-                outlined
-                hint="Formato: segundo minuto hora día mes día-semana año"
-              >
-                <template v-slot:append>
-                  <q-btn
-                    flat
-                    dense
-                    icon="help"
-                    @click="showCronHelper = true"
-                  >
-                    <q-tooltip>Ayuda con expresiones Cron</q-tooltip>
-                  </q-btn>
-                </template>
-              </q-input>
-              <div v-if="scheduleForm.cron" class="q-mt-xs">
-                <q-chip color="info" text-color="white" size="sm">
-                  <q-icon name="info" class="q-mr-xs" />
-                  {{ cronDescription }}
-                </q-chip>
-              </div>
-            </div>
-
-            <q-select
-              v-model="scheduleForm.desiredState"
-              :options="stateOptions"
-              label="Estado Deseado *"
-              :rules="[(val) => val !== null || 'Estado es requerido']"
-              outlined
-              emit-value
-              map-options
-            >
-              <template v-slot:option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <q-item-section avatar>
-                    <q-icon
-                      :name="scope.opt.value === 1 ? 'play_arrow' : 'stop'"
-                      :color="scope.opt.value === 1 ? 'positive' : 'negative'"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ scope.opt.label }}</q-item-label>
-                    <q-item-label caption>{{ scope.opt.description }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-
-            <q-select
-              v-model="scheduleForm.resources"
-              :options="availableResources"
-              option-label="name"
-              option-value="id"
-              multiple
-              label="Recursos *"
-              outlined
-              use-chips
-              :rules="[(val) => val.length > 0 || 'Selecciona al menos un recurso']"
-              hint="Selecciona los recursos que se afectarán por esta programación"
-            >
-              <template v-slot:option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <q-item-section avatar>
-                    <q-icon
-                      :name="scope.opt.type === 'RDS' ? 'storage' : 'computer'"
-                      color="info"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ scope.opt.name }}</q-item-label>
-                    <q-item-label caption>{{ scope.opt.type }} - {{ scope.opt.resourceIdentifier }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-
-            <q-toggle
-              v-model="scheduleForm.isEnabled"
-              label="Habilitar programación"
-              color="positive"
-              left-label
-            />
-
-            <div class="row justify-end q-gutter-sm q-mt-md">
-              <q-btn
-                flat
-                label="Cancelar"
-                color="primary"
-                v-close-popup
-                @click="resetForm"
-              />
-              <q-btn
-                label="Guardar"
-                type="submit"
-                color="primary"
-                :loading="saving"
-                unelevated
-              />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
-
-    <!-- Dialog de ayuda Cron -->
-    <q-dialog v-model="showCronHelper">
-      <q-card style="min-width: 500px">
-        <q-card-section>
-          <div class="text-h6">Ayuda con Expresiones Cron</div>
-        </q-card-section>
-        <q-card-section class="q-pt-none">
-          <div class="q-gutter-md">
-            <div>
-              <div class="text-subtitle2 q-mb-xs">Formato:</div>
-              <code class="bg-grey-3 q-pa-sm rounded-borders block">
-                segundo minuto hora día mes día-semana año
-              </code>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-subtitle2 q-mb-xs">Ejemplos comunes:</div>
-              <div class="q-gutter-sm">
-                <div>
-                  <code class="bg-grey-3 q-pa-xs rounded-borders">0 9 * * ? *</code>
-                  <span class="q-ml-sm text-caption">Todos los días a las 9:00 AM</span>
-                </div>
-                <div>
-                  <code class="bg-grey-3 q-pa-xs rounded-borders">0 0 1 * ? *</code>
-                  <span class="q-ml-sm text-caption">Primer día de cada mes a medianoche</span>
-                </div>
-                <div>
-                  <code class="bg-grey-3 q-pa-xs rounded-borders">0 0/30 * * ? *</code>
-                  <span class="q-ml-sm text-caption">Cada 30 minutos</span>
-                </div>
-                <div>
-                  <code class="bg-grey-3 q-pa-xs rounded-borders">0 0 9 ? * MON-FRI *</code>
-                  <span class="q-ml-sm text-caption">Lunes a viernes a las 9:00 AM</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Cerrar" color="primary" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- Dialog de detalles -->
-    <q-dialog v-model="showDetailDialog">
-      <q-card style="min-width: 600px; max-width: 800px" v-if="selectedSchedule">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Detalles de la Programación</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section>
-          <div class="q-gutter-md">
-            <div>
-              <div class="text-caption text-grey-7">Nombre</div>
-              <div class="text-body1">{{ selectedSchedule.name }}</div>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-caption text-grey-7">Expresión Cron</div>
-              <div class="text-body2">
-                <q-icon name="schedule" size="sm" color="primary" class="q-mr-xs" />
-                {{ selectedSchedule.cron }}
-              </div>
-              <q-chip color="info" text-color="white" size="sm" class="q-mt-xs">
-                {{ cronDescription }}
-              </q-chip>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-caption text-grey-7">Estado Deseado</div>
-              <q-chip
-                :color="selectedSchedule.desiredState === 1 ? 'positive' : 'negative'"
-                text-color="white"
-              >
-                {{ selectedSchedule.desiredState === 1 ? 'Activar' : 'Desactivar' }}
-              </q-chip>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-caption text-grey-7">Habilitado</div>
-              <q-chip
-                :color="selectedSchedule.isEnabled ? 'positive' : 'negative'"
-                text-color="white"
-                :icon="selectedSchedule.isEnabled ? 'check_circle' : 'cancel'"
-              >
-                {{ selectedSchedule.isEnabled ? 'Sí' : 'No' }}
-              </q-chip>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-caption text-grey-7">Activo</div>
-              <q-chip
-                :color="selectedSchedule.isActive ? 'positive' : 'negative'"
-                text-color="white"
-                :icon="selectedSchedule.isActive ? 'check_circle' : 'cancel'"
-              >
-                {{ selectedSchedule.isActive ? 'Sí' : 'No' }}
-              </q-chip>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-caption text-grey-7">Recursos Asociados</div>
-              <div class="q-mt-sm q-gutter-xs">
-                <q-chip
-                  v-for="(resource, idx) in selectedSchedule.resources"
-                  :key="idx"
-                  color="info"
-                  text-color="white"
-                  :icon="resource.type === 'RDS' ? 'storage' : 'computer'"
-                >
-                  {{ resource.resourceIdentifier.split('/').pop() || resource.resourceIdentifier }}
-                </q-chip>
-                <span v-if="selectedSchedule.resources.length === 0" class="text-grey-6">
-                  Sin recursos asociados
-                </span>
-              </div>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-caption text-grey-7">ID</div>
-              <div class="text-body2 text-grey-8">{{ selectedSchedule.id }}</div>
-            </div>
-            <q-separator />
-            <div>
-              <div class="text-caption text-grey-7">Fecha de Creación</div>
-              <div class="text-body2 text-grey-8">
-                {{ formatDate(selectedSchedule.timestamp) }}
-              </div>
-            </div>
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Editar"
-            color="primary"
-            @click="editSchedule(selectedSchedule); showDetailDialog = false"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-  </q-page>
+    <ConfirmDialog v-model="confirmVisible" title="Confirmar Eliminación" :message="confirmMessage" ok-label="Eliminar" ok-class="btn-danger" @confirm="doDelete" />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useQuasar } from 'quasar';
 import { schedulesService } from '../services/schedules';
 import { resourcesService } from '../services/resources';
-import type {
-  ScheduleResource,
-  StoreScheduleBody,
-  UpdateScheduleBody,
-  ResourceStateResource,
-  Resource,
-  State,
-} from '../types';
+import { useToast } from '../composables/useToast';
+import Modal from '../components/Modal.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
+import type { ScheduleResource, StoreScheduleBody, ResourceStateResource } from '../types';
 
-const $q = useQuasar();
+const toast = useToast();
 const loading = ref(false);
 const saving = ref(false);
 const schedules = ref<ScheduleResource[]>([]);
 const resources = ref<ResourceStateResource[]>([]);
 const filter = ref('');
 const filterEnabled = ref<boolean | null>(null);
-const showCreateDialog = ref(false);
-const showDetailDialog = ref(false);
-const showCronHelper = ref(false);
+const page = ref(1);
+const rowsPerPage = 10;
+const showModal = ref(false);
+const showCronHelp = ref(false);
 const editingSchedule = ref<ScheduleResource | null>(null);
-const selectedSchedule = ref<ScheduleResource | null>(null);
-const toggleLoading = ref<Record<string, boolean>>({});
-const scheduleFormRef = ref<any>(null);
+const confirmVisible = ref(false);
+const confirmMessage = ref('');
+let deleteTarget: ScheduleResource | null = null;
 
 const scheduleForm = ref<StoreScheduleBody>({
   name: '',
@@ -511,155 +151,42 @@ const scheduleForm = ref<StoreScheduleBody>({
   desiredState: 0,
   resources: [],
 });
+const selectedResourceIds = ref<string[]>([]);
 
-const stateOptions = [
-  {
-    label: 'Activar',
-    value: 1,
-    description: 'Los recursos se activarán según el cron',
-  },
-  {
-    label: 'Desactivar',
-    value: 0,
-    description: 'Los recursos se desactivarán según el cron',
-  },
-];
-
-const enabledFilterOptions = [
-  { label: 'Todos', value: null },
-  { label: 'Habilitadas', value: true },
-  { label: 'Deshabilitadas', value: false },
-];
-
-const pagination = ref({
-  sortBy: 'name',
-  descending: false,
-  page: 1,
-  rowsPerPage: 10,
-  rowsNumber: 0,
-});
-
-const hasActiveFilters = computed(() => {
-  return !!filter.value || filterEnabled.value !== null;
-});
-
-const cronDescription = computed(() => {
-  if (!scheduleForm.value.cron) return '';
-  // Descripción simple del cron
-  const parts = scheduleForm.value.cron.split(' ');
-  if (parts.length >= 3) {
-    const hour = parts[2];
-    const minute = parts[1];
-    if (hour !== '*' && minute !== '*') {
-      return `Ejecuta a las ${hour}:${minute.padStart(2, '0')}`;
-    }
-  }
-  return 'Expresión cron personalizada';
-});
+const hasActiveFilters = computed(() => !!filter.value || filterEnabled.value !== null);
 
 const availableResources = computed(() =>
-  resources.value.map((r) => ({
-    id: r.id,
-    name: r.name,
-    type: r.type,
-    resourceIdentifier: r.resourceIdentifier,
-  }))
+  resources.value.map((r) => ({ id: r.id, name: r.name, type: r.type }))
 );
 
 const filteredSchedules = computed(() => {
-  let result = [...schedules.value];
-
-  // Filtro de búsqueda
+  let r = [...schedules.value];
   if (filter.value) {
-    const search = filter.value.toLowerCase();
-    result = result.filter(
-      (s) =>
-        s.name.toLowerCase().includes(search) ||
-        s.cron.toLowerCase().includes(search)
-    );
+    const s = filter.value.toLowerCase();
+    r = r.filter((x) => x.name.toLowerCase().includes(s) || x.cron.toLowerCase().includes(s));
   }
-
-  // Filtro por habilitado
-  if (filterEnabled.value !== null) {
-    result = result.filter((s) => s.isEnabled === filterEnabled.value);
-  }
-
-  // Ordenamiento
-  const sortBy = pagination.value.sortBy;
-  const descending = pagination.value.descending;
-  result.sort((a, b) => {
-    const aVal = a[sortBy as keyof ScheduleResource];
-    const bVal = b[sortBy as keyof ScheduleResource];
-    if (aVal < bVal) return descending ? 1 : -1;
-    if (aVal > bVal) return descending ? -1 : 1;
-    return 0;
-  });
-
-  pagination.value.rowsNumber = result.length;
-
-  // Paginación
-  const start = (pagination.value.page - 1) * pagination.value.rowsPerPage;
-  const end = start + pagination.value.rowsPerPage;
-  return result.slice(start, end);
+  if (filterEnabled.value !== null) r = r.filter((x) => x.isEnabled === filterEnabled.value);
+  return r.sort((a, b) => (a.name < b.name ? -1 : 1));
 });
 
-const columns = [
-  { name: 'name', label: 'Nombre', field: 'name', align: 'left', sortable: true },
-  { name: 'cron', label: 'Cron', field: 'cron', align: 'left', sortable: true },
-  {
-    name: 'desiredState',
-    label: 'Estado Deseado',
-    field: 'desiredState',
-    align: 'center',
-  },
-  {
-    name: 'resources',
-    label: 'Recursos',
-    field: 'resources',
-    align: 'left',
-  },
-  {
-    name: 'isEnabled',
-    label: 'Habilitado',
-    field: 'isEnabled',
-    align: 'center',
-  },
-  {
-    name: 'isActive',
-    label: 'Activo',
-    field: 'isActive',
-    align: 'center',
-  },
-  { name: 'actions', label: 'Acciones', align: 'center' },
-];
+const totalPages = computed(() => Math.ceil(filteredSchedules.value.length / rowsPerPage) || 1);
 
-const formatDate = (timestamp: number) => {
-  return new Date(timestamp).toLocaleString('es-ES');
-};
+const paginatedSchedules = computed(() => {
+  const start = (page.value - 1) * rowsPerPage;
+  return filteredSchedules.value.slice(start, start + rowsPerPage);
+});
 
 const clearFilters = () => {
   filter.value = '';
   filterEnabled.value = null;
 };
 
-const onRequest = (props: any) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
-  pagination.value.page = page;
-  pagination.value.rowsPerPage = rowsPerPage;
-  pagination.value.sortBy = sortBy;
-  pagination.value.descending = descending;
-};
-
 const loadSchedules = async () => {
   loading.value = true;
   try {
     schedules.value = await schedulesService.getAll();
-  } catch (error: any) {
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Error al cargar las programaciones',
-      position: 'top',
-    });
+  } catch (e: any) {
+    toast.error(e.message || 'Error al cargar');
   } finally {
     loading.value = false;
   }
@@ -668,142 +195,141 @@ const loadSchedules = async () => {
 const loadResources = async () => {
   try {
     resources.value = await resourcesService.getAll();
-  } catch (error) {
-    console.error('Error al cargar recursos:', error);
+  } catch (e) {
+    console.error(e);
   }
 };
 
+const openCreate = () => {
+  editingSchedule.value = null;
+  scheduleForm.value = { name: '', cron: '', isEnabled: true, desiredState: 0, resources: [] };
+  selectedResourceIds.value = [];
+  showModal.value = true;
+};
+
+const editSchedule = (s: ScheduleResource) => {
+  editingSchedule.value = s;
+  scheduleForm.value = {
+    name: s.name,
+    cron: s.cron,
+    isEnabled: s.isEnabled,
+    desiredState: s.desiredState,
+    resources: s.resources,
+  };
+  selectedResourceIds.value = s.resources.map((r) => r.id);
+  showModal.value = true;
+};
+
 const saveSchedule = async () => {
+  if (selectedResourceIds.value.length === 0) {
+    toast.error('Selecciona al menos un recurso');
+    return;
+  }
   saving.value = true;
   try {
+    const resourcesBody = selectedResourceIds.value
+      .map((id) => resources.value.find((x) => x.id === id))
+      .filter(Boolean)
+      .map((r) => ({ id: r!.id, type: r!.type, resourceIdentifier: r!.resourceIdentifier }));
+    const body = {
+      ...scheduleForm.value,
+      resources: resourcesBody,
+    };
     if (editingSchedule.value) {
-      await schedulesService.update(editingSchedule.value.id, scheduleForm.value);
-      $q.notify({
-        type: 'positive',
-        message: 'Programación actualizada correctamente',
-        position: 'top',
-        icon: 'check_circle',
-      });
+      await schedulesService.update(editingSchedule.value.id, body);
+      toast.success('Programación actualizada');
     } else {
-      await schedulesService.create(scheduleForm.value);
-      $q.notify({
-        type: 'positive',
-        message: 'Programación creada correctamente',
-        position: 'top',
-        icon: 'check_circle',
-      });
+      await schedulesService.create(body);
+      toast.success('Programación creada');
     }
-    showCreateDialog.value = false;
-    resetForm();
-    await loadSchedules();
-  } catch (error: any) {
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Error al guardar la programación',
-      position: 'top',
-    });
+    showModal.value = false;
+    loadSchedules();
+  } catch (e: any) {
+    toast.error(e.message || 'Error al guardar');
   } finally {
     saving.value = false;
   }
 };
 
-const viewSchedule = (schedule: ScheduleResource) => {
-  selectedSchedule.value = schedule;
-  showDetailDialog.value = true;
-};
-
-const editSchedule = (schedule: ScheduleResource) => {
-  editingSchedule.value = schedule;
-  scheduleForm.value = {
-    name: schedule.name,
-    cron: schedule.cron,
-    isEnabled: schedule.isEnabled,
-    desiredState: schedule.desiredState,
-    resources: schedule.resources,
-  };
-  showCreateDialog.value = true;
-};
-
-const resetForm = () => {
-  editingSchedule.value = null;
-  scheduleForm.value = {
-    name: '',
-    cron: '',
-    isEnabled: true,
-    desiredState: 0,
-    resources: [],
-  };
-  if (scheduleFormRef.value) {
-    scheduleFormRef.value.resetValidation();
-  }
-};
-
-const toggleSchedule = async (id: string, enabled: boolean) => {
-  toggleLoading.value[id] = true;
+const toggleSchedule = async (s: ScheduleResource, enabled: boolean) => {
   try {
-    const schedule = schedules.value.find((s) => s.id === id);
-    if (schedule) {
-      await schedulesService.update(id, {
-        ...schedule,
-        isEnabled: enabled,
-      });
-      $q.notify({
-        type: 'positive',
-        message: `Programación ${enabled ? 'habilitada' : 'deshabilitada'}`,
-        position: 'top',
-        icon: enabled ? 'check_circle' : 'cancel',
-      });
-      await loadSchedules();
-    }
-  } catch (error: any) {
-    $q.notify({
-      type: 'negative',
-      message: error.message || 'Error al actualizar la programación',
-      position: 'top',
+    await schedulesService.update(s.id, {
+      name: s.name,
+      cron: s.cron,
+      isEnabled: enabled,
+      desiredState: s.desiredState,
+      resources: s.resources,
     });
-  } finally {
-    toggleLoading.value[id] = false;
+    toast.success(enabled ? 'Programación habilitada' : 'Programación deshabilitada');
+    loadSchedules();
+  } catch (e: any) {
+    toast.error(e.message || 'Error');
   }
 };
 
-const confirmDelete = (schedule: ScheduleResource) => {
-  $q.dialog({
-    title: 'Confirmar Eliminación',
-    message: `¿Está seguro de eliminar la programación "${schedule.name}"?`,
-    cancel: true,
-    persistent: true,
-    ok: {
-      label: 'Eliminar',
-      color: 'negative',
-      unelevated: true,
-    },
-  }).onOk(async () => {
-    try {
-      await schedulesService.delete(schedule.id);
-      $q.notify({
-        type: 'positive',
-        message: 'Programación eliminada correctamente',
-        position: 'top',
-        icon: 'delete',
-      });
-      await loadSchedules();
-    } catch (error: any) {
-      $q.notify({
-        type: 'negative',
-        message: error.message || 'Error al eliminar la programación',
-        position: 'top',
-      });
-    }
-  });
+const confirmDelete = (s: ScheduleResource) => {
+  deleteTarget = s;
+  confirmMessage.value = `¿Está seguro de eliminar "${s.name}"?`;
+  confirmVisible.value = true;
 };
 
-onMounted(async () => {
-  await Promise.all([loadSchedules(), loadResources()]);
+const doDelete = async () => {
+  if (!deleteTarget) return;
+  try {
+    await schedulesService.delete(deleteTarget.id);
+    toast.success('Programación eliminada');
+    loadSchedules();
+  } catch (e: any) {
+    toast.error(e.message || 'Error');
+  }
+  deleteTarget = null;
+};
+
+onMounted(() => {
+  loadSchedules();
+  loadResources();
 });
 </script>
 
 <style scoped>
-.sticky-header-table {
-  max-height: calc(100vh - 200px);
-}
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+.page-header h1 { margin: 0; font-size: 1.5rem; }
+.subtitle { margin: 4px 0 0; color: var(--text-tertiary); font-size: 0.875rem; }
+
+.filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.search-wrap { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; flex: 1; min-width: 200px; }
+.search-wrap input { flex: 1; background: none; border: none; color: var(--text-primary); font-size: 0.875rem; }
+.select { padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); min-width: 120px; }
+
+.table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+.data-table th { font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; }
+.mono { font-family: monospace; font-size: 0.8rem; }
+.chip { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-right: 4px; }
+.chip.info { background: var(--info); color: white; }
+.chip.success { background: var(--success); color: white; }
+.chip.error { background: var(--error); color: white; }
+.btn-icon { background: none; color: var(--text-secondary); padding: 4px; }
+.btn-icon:hover { color: var(--primary); }
+.btn-icon.danger:hover { color: var(--error); }
+
+.toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; inset: 0; background: var(--bg-tertiary); border-radius: 24px; transition: 0.3s; }
+.slider::before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+.toggle input:checked + .slider { background: var(--success); }
+.toggle input:checked + .slider::before { transform: translateX(20px); }
+
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px; }
+.form .field { margin-bottom: 16px; }
+.form .field label { display: block; margin-bottom: 6px; color: var(--text-tertiary); font-size: 0.875rem; }
+.form .field input, .form .field select { width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); }
+.form .field.checkbox label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+.hint { font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px; display: block; }
+.empty { text-align: center; color: var(--text-tertiary); padding: 24px; }
+code { background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-size: 0.875rem; }
+.link { background: none; color: var(--primary); padding: 0; font-size: 0.875rem; cursor: pointer; }
 </style>
