@@ -194,7 +194,7 @@ const commandForm = ref({
 });
 
 const ec2Resources = computed(() =>
-  resources.value.filter((r) => r.type === 'EC2')
+  resources.value.filter((r) => r.type === 'EC2' && r.state === 1)
 );
 
 const resourceName = (id: string) => resources.value.find((r) => r.id === id)?.name;
@@ -300,7 +300,11 @@ const saveCommand = async () => {
 
 const openExecute = (c: Command) => {
   commandToExecute.value = c;
-  selectedExecuteResourceIds.value = [...(c.linkedResourceIds || [])];
+  // Solo preseleccionar instancias que están en ejecución (state === 1)
+  const runningIds = (c.linkedResourceIds || []).filter(
+    (id) => ec2Resources.value.some((r) => r.id === id)
+  );
+  selectedExecuteResourceIds.value = [...runningIds];
   showExecuteModal.value = true;
 };
 
