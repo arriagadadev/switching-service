@@ -238,18 +238,6 @@ $dark-hover: #2d2d2d;
     pointer-events: auto !important;
   }
   
-  // Asegurar que el input sea completamente clickeable
-  &.search-input {
-    .q-field__control {
-      pointer-events: auto !important;
-    }
-    
-    input {
-      pointer-events: auto !important;
-      -webkit-user-select: text;
-      user-select: text;
-    }
-  }
 }
 
 // Selects - Dark theme con mejor visibilidad del valor seleccionado
@@ -279,6 +267,36 @@ $dark-hover: #2d2d2d;
     span {
       color: $dark-text-primary !important;
     }
+  }
+  
+  // Botón clear: evitar que se superponga al texto
+  // Dar espacio al texto para que no quede debajo del botón clear
+  .q-field__control-container {
+    padding-right: 40px;
+    overflow: hidden;
+  }
+
+  .q-field__native,
+  .q-field__input {
+    padding-right: 8px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .q-field__append,
+  .q-field__marginal {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: auto;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: auto;
+    z-index: 1;
   }
   
   // Valor seleccionado visible

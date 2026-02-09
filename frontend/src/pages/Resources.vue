@@ -23,21 +23,26 @@
       <q-card-section class="q-pa-md">
         <div class="row q-gutter-md items-end">
           <div class="col-12 col-md-4">
-            <q-input
-              v-model="filter"
-              placeholder="Buscar por nombre o identificador..."
-              outlined
-              dense
-              clearable
-              @click.stop="handleSearchClick"
-              @focus="handleSearchFocus"
-              ref="searchInputRef"
-              class="search-input"
-            >
-              <template v-slot:prepend>
-                <q-icon name="search" />
-              </template>
-            </q-input>
+            <div class="search-input-wrapper">
+              <q-icon name="search" class="search-input-icon" />
+              <input
+                v-model="filter"
+                type="text"
+                class="search-input-native"
+                placeholder="Buscar por nombre o identificador..."
+                ref="searchInputRef"
+              />
+              <q-btn
+                v-if="filter"
+                flat
+                round
+                dense
+                icon="close"
+                size="sm"
+                class="search-input-clear"
+                @click="filter = ''"
+              />
+            </div>
           </div>
           <div class="col-12 col-md-2">
             <q-select
@@ -562,7 +567,7 @@ const selectedResource = ref<ResourceStateResource | null>(null);
 const viewMode = ref<'table' | 'cards'>('table');
 const actionLoading = ref<Record<string, boolean>>({});
 const resourceFormRef = ref<any>(null);
-const searchInputRef = ref<any>(null);
+const searchInputRef = ref<HTMLInputElement | null>(null);
 
 const resourceForm = ref<StoreResourceStateBody>({
   name: '',
@@ -708,26 +713,6 @@ const clearFilters = () => {
   filter.value = '';
   filterType.value = null;
   filterState.value = null;
-};
-
-const handleSearchClick = () => {
-  // Asegurar que el input sea focusable
-  if (searchInputRef.value) {
-    const input = searchInputRef.value.$el?.querySelector('input');
-    if (input) {
-      input.focus();
-      input.click();
-    }
-  }
-};
-
-const handleSearchFocus = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target && target.select && typeof target.select === 'function') {
-    setTimeout(() => {
-      target.select();
-    }, 0);
-  }
 };
 
 const onRequest = (props: any) => {
@@ -1040,6 +1025,53 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  background-color: #1e1e1e;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+
+.search-input-wrapper:focus-within {
+  border-color: #1976d2;
+}
+
+.search-input-icon {
+  color: #b0b0b0;
+  flex-shrink: 0;
+}
+
+.search-input-native {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.search-input-native::placeholder {
+  color: #b0b0b0;
+  opacity: 0.7;
+}
+
+.search-input-clear {
+  flex-shrink: 0;
+  color: #b0b0b0;
+}
+
+.search-input-clear:hover {
+  color: #ffffff;
+}
+
 .resource-card {
   transition: transform 0.2s, box-shadow 0.2s;
 }
