@@ -17,25 +17,21 @@
     <aside class="sidebar" :class="{ open: leftDrawerOpen, mini: miniState }">
       <nav class="nav">
         <div v-if="!miniState" class="nav-label">Navegación</div>
-        <router-link to="/" class="nav-item" exact-active-class="active">
+        <router-link to="/" class="nav-item" exact-active-class="active" :title="miniState ? 'Dashboard' : undefined">
           <span class="material-symbols-outlined">dashboard</span>
           <span v-if="!miniState" class="nav-text">Dashboard</span>
-          <span v-if="miniState" class="tooltip">Dashboard</span>
         </router-link>
-        <router-link to="/resources" class="nav-item" exact-active-class="active">
+        <router-link to="/resources" class="nav-item" exact-active-class="active" :title="miniState ? 'Recursos' : undefined">
           <span class="material-symbols-outlined">storage</span>
           <span v-if="!miniState" class="nav-text">Recursos</span>
-          <span v-if="miniState" class="tooltip">Recursos</span>
         </router-link>
-        <router-link to="/schedules" class="nav-item" exact-active-class="active">
+        <router-link to="/schedules" class="nav-item" exact-active-class="active" :title="miniState ? 'Programaciones' : undefined">
           <span class="material-symbols-outlined">schedule</span>
           <span v-if="!miniState" class="nav-text">Programaciones</span>
-          <span v-if="miniState" class="tooltip">Programaciones</span>
         </router-link>
-        <router-link to="/change-password" class="nav-item" exact-active-class="active">
+        <router-link to="/change-password" class="nav-item" exact-active-class="active" :title="miniState ? 'Cambiar Contraseña' : undefined">
           <span class="material-symbols-outlined">lock</span>
           <span v-if="!miniState" class="nav-text">Cambiar Contraseña</span>
-          <span v-if="miniState" class="tooltip">Cambiar Contraseña</span>
         </router-link>
       </nav>
       <div class="sidebar-footer">
@@ -150,6 +146,7 @@ const handleLogout = async () => {
   display: flex;
   flex-direction: column;
   transform: translateX(-100%);
+  overflow-x: hidden;
 }
 
 .sidebar.open {
@@ -168,22 +165,6 @@ const handleLogout = async () => {
 .sidebar.mini .nav-item {
   justify-content: center;
   padding: 12px;
-}
-
-.sidebar.mini .tooltip {
-  display: none;
-}
-
-.sidebar.mini .nav-item:hover .tooltip {
-  display: block;
-  position: absolute;
-  left: 100%;
-  margin-left: 8px;
-  padding: 6px 12px;
-  background: var(--bg-tertiary);
-  border-radius: 4px;
-  white-space: nowrap;
-  z-index: 1000;
 }
 
 .nav {
