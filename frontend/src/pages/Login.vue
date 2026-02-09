@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-center bg-grey-2" style="min-height: 100vh">
+  <div class="flex flex-center" style="min-height: 100vh; background-color: #121212;">
     <q-card class="q-pa-md" style="min-width: 400px">
       <q-card-section>
         <div class="text-h6 text-center q-mb-md">

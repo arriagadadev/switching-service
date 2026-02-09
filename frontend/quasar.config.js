@@ -71,7 +71,7 @@ module.exports = configure(function (ctx) {
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
     framework: {
       config: {
-        dark: 'auto', // or Boolean true/false
+        dark: true, // Dark mode activado
       },
 
       // iconSet: 'material-icons', // Quasar icon set

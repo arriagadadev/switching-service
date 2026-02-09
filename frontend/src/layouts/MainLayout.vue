@@ -26,7 +26,6 @@
       :width="280"
       :mini="miniState"
       :breakpoint="1024"
-      class="bg-grey-1"
     >
       <q-list class="q-pa-sm">
         <q-item-label header class="text-grey-8 q-pa-sm">

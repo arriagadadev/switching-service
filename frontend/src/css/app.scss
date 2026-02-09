@@ -1,67 +1,79 @@
-// app global styles in SCSS
+// app global styles in SCSS - Dark Theme
 
-// Mejoras de contraste para el sidebar
+// Variables de colores para dark theme con buen contraste
+$dark-bg-primary: #121212;
+$dark-bg-secondary: #1e1e1e;
+$dark-bg-tertiary: #2d2d2d;
+$dark-text-primary: #ffffff;
+$dark-text-secondary: #e0e0e0;
+$dark-text-tertiary: #b0b0b0;
+$dark-border: #3d3d3d;
+$dark-hover: #2d2d2d;
+
+// Sidebar - Dark theme con buen contraste
 .q-drawer {
-  background-color: #f5f5f5 !important;
-  border-right: 1px solid #e0e0e0;
+  background-color: $dark-bg-secondary !important;
+  border-right: 1px solid $dark-border;
+  color: $dark-text-primary;
   
   .q-item {
-    color: #424242;
+    color: $dark-text-secondary;
     border-radius: 8px;
     margin-bottom: 4px;
     transition: all 0.2s ease;
     
     &.q-item--active {
       background-color: #1976d2 !important;
-      color: white !important;
+      color: $dark-text-primary !important;
       
       .q-icon {
-        color: white !important;
+        color: $dark-text-primary !important;
       }
       
       .q-item__label {
-        color: white !important;
+        color: $dark-text-primary !important;
       }
     }
     
     &:hover:not(.q-item--active) {
-      background-color: #e3f2fd;
-      color: #1976d2;
+      background-color: $dark-bg-tertiary;
+      color: $dark-text-primary;
       
       .q-icon {
-        color: #1976d2;
+        color: $dark-text-primary;
       }
     }
     
     .q-icon {
-      color: #757575;
+      color: $dark-text-secondary;
       transition: color 0.2s ease;
     }
     
     &.q-item--active .q-icon {
-      color: white !important;
+      color: $dark-text-primary !important;
     }
     
     .q-item__label {
-      color: #424242;
+      color: $dark-text-secondary;
       font-weight: 500;
     }
   }
   
   .q-item-label {
-    color: #616161;
+    color: $dark-text-secondary;
     font-weight: 600;
     font-size: 0.875rem;
   }
 }
 
-// Mejoras para el contenido principal - mejor contraste
+// Contenedor principal - Dark theme
 .q-page-container {
-  background-color: #fafafa;
+  background-color: $dark-bg-primary;
 }
 
 .q-page {
-  background-color: #ffffff;
+  background-color: $dark-bg-primary;
+  color: $dark-text-primary;
   max-width: 100%;
   width: 100%;
   
@@ -78,68 +90,291 @@
     padding-left: 8px;
     padding-right: 8px;
   }
-}
-
-// Mejoras para las cards
-.q-card {
-  width: 100%;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   
-  &.flat {
-    box-shadow: none;
-    border: 1px solid #e0e0e0;
+  // Títulos y textos con buen contraste
+  .text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6 {
+    color: $dark-text-primary;
+  }
+  
+  .text-body1, .text-body2 {
+    color: $dark-text-secondary;
+  }
+  
+  .text-caption {
+    color: $dark-text-tertiary;
   }
 }
 
-// Mejoras para inputs y selects
-.q-field--outlined .q-field__control {
-  background-color: #ffffff;
+// Cards - Dark theme con buen contraste
+.q-card {
+  width: 100%;
+  background-color: $dark-bg-secondary;
+  border: 1px solid $dark-border;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: $dark-text-primary;
+  
+  &.flat {
+    box-shadow: none;
+    border: 1px solid $dark-border;
+  }
+  
+  .q-card-section {
+    color: $dark-text-primary;
+  }
+  
+  .q-card__section {
+    color: $dark-text-primary;
+  }
 }
 
-// Mejoras para el buscador - asegurar que sea clickeable
+// Inputs y selects - Dark theme
+.q-field--outlined {
+  .q-field__control {
+    background-color: $dark-bg-secondary;
+    color: $dark-text-primary;
+  }
+  
+  .q-field__native {
+    color: $dark-text-primary;
+  }
+  
+  .q-field__label {
+    color: $dark-text-tertiary;
+  }
+  
+  &.q-field--focused .q-field__label {
+    color: #64b5f6;
+  }
+  
+  .q-field__input {
+    color: $dark-text-primary;
+  }
+}
+
 .q-input {
   .q-field__control {
     cursor: text;
+    color: $dark-text-primary;
   }
   
   input {
     cursor: text;
+    color: $dark-text-primary;
+  }
+  
+  .q-field__native {
+    color: $dark-text-primary;
   }
 }
 
-// Mejoras para botones toggle
+.q-select {
+  .q-field__native {
+    color: $dark-text-primary;
+  }
+  
+  .q-field__input {
+    color: $dark-text-primary;
+  }
+}
+
+// Botones toggle - Dark theme
 .q-btn-toggle {
+  background-color: $dark-bg-tertiary;
+  border-radius: 4px;
+  
   .q-btn {
     &.q-btn--active {
       background-color: #1976d2 !important;
-      color: white !important;
+      color: $dark-text-primary !important;
     }
     
     &:not(.q-btn--active) {
-      background-color: #f5f5f5;
-      color: #757575;
+      background-color: transparent;
+      color: $dark-text-secondary;
+      
+      &:hover {
+        background-color: $dark-bg-secondary;
+        color: $dark-text-primary;
+      }
     }
   }
 }
 
-// Mejoras para tablas
+// Tablas - Dark theme con buen contraste
 .q-table {
-  background-color: #ffffff;
+  background-color: $dark-bg-secondary;
+  color: $dark-text-primary;
   
   thead th {
-    background-color: #f5f5f5;
-    color: #424242;
+    background-color: $dark-bg-tertiary;
+    color: $dark-text-primary;
     font-weight: 600;
+    border-bottom: 1px solid $dark-border;
   }
   
-  tbody tr:hover {
-    background-color: #f5f5f5;
+  tbody {
+    tr {
+      color: $dark-text-secondary;
+      border-bottom: 1px solid $dark-border;
+      
+      &:hover {
+        background-color: $dark-bg-tertiary;
+        color: $dark-text-primary;
+      }
+    }
+    
+    td {
+      color: $dark-text-secondary;
+      border-bottom: 1px solid $dark-border;
+    }
+  }
+  
+  .q-table__bottom {
+    background-color: $dark-bg-secondary;
+    color: $dark-text-primary;
+    border-top: 1px solid $dark-border;
   }
 }
 
-// Mejoras para el header
+// Header - Dark theme
 .q-header {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #1976d2 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: $dark-text-primary;
+}
+
+// Chips y badges - Dark theme con buen contraste
+.q-chip {
+  &.bg-positive {
+    background-color: #4caf50 !important;
+    color: $dark-text-primary !important;
+  }
+  
+  &.bg-negative {
+    background-color: #f44336 !important;
+    color: $dark-text-primary !important;
+  }
+  
+  &.bg-info {
+    background-color: #2196f3 !important;
+    color: $dark-text-primary !important;
+  }
+  
+  &.bg-secondary {
+    background-color: #757575 !important;
+    color: $dark-text-primary !important;
+  }
+}
+
+// Separadores - Dark theme
+.q-separator {
+  background-color: $dark-border;
+}
+
+// Diálogos - Dark theme
+.q-dialog {
+  .q-card {
+    background-color: $dark-bg-secondary;
+    color: $dark-text-primary;
+  }
+  
+  .q-dialog__inner {
+    .q-card {
+      background-color: $dark-bg-secondary;
+      color: $dark-text-primary;
+    }
+  }
+}
+
+// Listas - Dark theme
+.q-list {
+  background-color: transparent;
+  color: $dark-text-primary;
+}
+
+// Botones - Dark theme
+.q-btn {
+  &.bg-grey-1, &.bg-grey-2, &.bg-grey-3 {
+    background-color: $dark-bg-tertiary !important;
+    color: $dark-text-primary !important;
+  }
+  
+  &.text-grey-7, &.text-grey-8 {
+    color: $dark-text-secondary !important;
+  }
+}
+
+// Campos de formulario - Dark theme
+.q-field--filled {
+  .q-field__control {
+    background-color: $dark-bg-tertiary;
+    color: $dark-text-primary;
+  }
+  
+  .q-field__native {
+    color: $dark-text-primary;
+  }
+}
+
+// Placeholder text - Dark theme
+::placeholder {
+  color: $dark-text-tertiary !important;
+  opacity: 0.7;
+}
+
+// Scrollbars - Dark theme
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $dark-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $dark-bg-tertiary;
+  border-radius: 4px;
+  
+  &:hover {
+    background: $dark-border;
+  }
+}
+
+// Mejoras específicas para elementos con texto gris - Dark theme
+.text-grey-7, .text-grey-8 {
+  color: $dark-text-tertiary !important;
+}
+
+.text-grey-6 {
+  color: $dark-text-tertiary !important;
+}
+
+.text-grey {
+  color: $dark-text-secondary !important;
+}
+
+// Asegurar contraste en todos los textos de caption
+.text-caption {
+  color: $dark-text-tertiary !important;
+}
+
+// Asegurar contraste en body2
+.text-body2 {
+  color: $dark-text-secondary !important;
+  
+  &.text-grey-8 {
+    color: $dark-text-secondary !important;
+  }
+}
+
+// Asegurar contraste en todos los textos
+body {
+  background-color: $dark-bg-primary;
+  color: $dark-text-primary;
+}
+
+// Mejoras para el backdrop de diálogos
+.q-dialog__backdrop {
+  background-color: rgba(0, 0, 0, 0.7);
 }
