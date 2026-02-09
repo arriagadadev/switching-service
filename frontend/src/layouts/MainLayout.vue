@@ -1,5 +1,5 @@
 <template>
-  <div class="layout">
+  <div class="layout" :class="{ 'sidebar-open': leftDrawerOpen, 'sidebar-mini': miniState }">
     <header class="header">
       <button class="header-btn" @click="toggleDrawer" aria-label="Menu">
         <span class="material-symbols-outlined">menu</span>
@@ -149,6 +149,11 @@ const handleLogout = async () => {
   z-index: 90;
   display: flex;
   flex-direction: column;
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
 }
 
 .sidebar.mini {
@@ -258,22 +263,25 @@ const handleLogout = async () => {
 
 .main {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 0;
   margin-top: 56px;
   padding: 16px;
   min-height: calc(100vh - 56px);
+  transition: margin-left 0.2s;
 }
 
-.sidebar.mini ~ .main {
+.layout.sidebar-open .main {
+  margin-left: 280px;
+}
+
+.layout.sidebar-open.sidebar-mini .main {
   margin-left: 72px;
 }
 
 @media (max-width: 1024px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-  .sidebar.open {
-    transform: translateX(0);
+  .layout.sidebar-open .main,
+  .layout.sidebar-open.sidebar-mini .main {
+    margin-left: 0;
   }
   .sidebar.mini {
     width: 280px;
@@ -282,8 +290,8 @@ const handleLogout = async () => {
   .sidebar.mini .nav-label {
     display: block;
   }
-  .main {
-    margin-left: 0;
+  .overlay.visible {
+    display: block;
   }
 }
 </style>
