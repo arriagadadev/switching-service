@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Recursos</h1>
-        <p class="subtitle">Gestiona tus recursos AWS (RDS, EC2)</p>
+        <p class="subtitle">Gestiona tus recursos AWS (RDS, EC2, ECS)</p>
       </div>
       <button class="btn btn-primary" @click="showModal = true">
         <span class="material-symbols-outlined">add</span>
@@ -21,6 +21,7 @@
           <option :value="null">Tipo: Todos</option>
           <option value="RDS">RDS</option>
           <option value="EC2">EC2</option>
+          <option value="ECS">ECS</option>
         </select>
         <select v-model="filterState" class="select">
           <option :value="null">Estado: Todos</option>
@@ -48,7 +49,7 @@
           <tbody>
             <tr v-for="r in paginatedResources" :key="r.id">
               <td>{{ r.name }}</td>
-              <td><span class="chip info">{{ r.type }}</span></td>
+              <td><span class="chip" :class="chipClassForType(r.type)">{{ r.type }}</span></td>
               <td class="mono">{{ r.resourceIdentifier }}</td>
               <td><span class="chip" :class="r.state === 1 ? 'success' : 'error'">{{ r.state === 1 ? 'Activo' : 'Inactivo' }}</span></td>
               <td>
@@ -76,7 +77,7 @@
           <span class="chip" :class="r.state === 1 ? 'success' : 'error'">{{ r.state === 1 ? 'Activo' : 'Inactivo' }}</span>
         </div>
         <p class="mono">{{ r.resourceIdentifier }}</p>
-        <span class="chip info">{{ r.type }}</span>
+        <span class="chip" :class="chipClassForType(r.type)">{{ r.type }}</span>
         <div class="card-actions">
           <button class="btn-icon" @click="viewResource(r)"><span class="material-symbols-outlined">visibility</span> Ver</button>
           <button class="btn-icon" @click="editResource(r)"><span class="material-symbols-outlined">edit</span></button>
@@ -97,6 +98,7 @@
           <select v-model="resourceForm.type" @change="onTypeChange" required>
             <option value="RDS">RDS</option>
             <option value="EC2">EC2</option>
+            <option value="ECS">ECS</option>
           </select>
         </div>
         <div class="field" v-if="resourceForm.type === 'EC2'">
@@ -111,6 +113,13 @@
           <select v-model="resourceForm.resourceIdentifier" required>
             <option value="">Selecciona...</option>
             <option v-for="opt in rdsOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+        <div class="field" v-else-if="resourceForm.type === 'ECS'">
+          <label>Servicio ECS *</label>
+          <select v-model="resourceForm.resourceIdentifier" required>
+            <option value="">Selecciona...</option>
+            <option v-for="opt in ecsOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
         </div>
         <div class="field" v-else>
@@ -128,7 +137,7 @@
       <div v-if="selectedResource">
         <dl class="detail-list">
           <div><dt>Nombre</dt><dd>{{ selectedResource.name }}</dd></div>
-          <div><dt>Tipo</dt><dd><span class="chip info">{{ selectedResource.type }}</span></dd></div>
+          <div><dt>Tipo</dt><dd><span class="chip" :class="chipClassForType(selectedResource.type)">{{ selectedResource.type }}</span></dd></div>
           <div><dt>Estado</dt><dd><span class="chip" :class="selectedResource.state === 1 ? 'success' : 'error'">{{ selectedResource.state === 1 ? 'Activo' : 'Inactivo' }}</span></dd></div>
           <div><dt>Identificador</dt><dd class="mono">{{ selectedResource.resourceIdentifier }}</dd></div>
         </dl>
@@ -171,6 +180,7 @@ const selectedResource = ref<ResourceStateResource | null>(null);
 const actionLoading = ref<Record<string, boolean>>({});
 const ec2Options = ref<{ label: string; value: string }[]>([]);
 const rdsOptions = ref<{ label: string; value: string }[]>([]);
+const ecsOptions = ref<{ label: string; value: string }[]>([]);
 
 const resourceForm = ref<StoreResourceStateBody>({
   name: '',
@@ -185,6 +195,12 @@ const confirmOk = ref('OK');
 const confirmOkClass = ref('');
 let confirmResolve: (() => void) | null = null;
 let confirmResourceId: string | null = null;
+
+const chipClassForType = (type: string) => {
+  if (type === 'RDS') return 'info';
+  if (type === 'ECS') return 'ecs';
+  return 'secondary';
+};
 
 const hasActiveFilters = computed(() => !!filter.value || filterType.value !== null || filterState.value !== null);
 
@@ -240,6 +256,13 @@ const onTypeChange = async () => {
       rdsOptions.value = list.map((i) => ({ label: i.name || i.dbInstanceIdentifier, value: i.dbInstanceIdentifier }));
     } catch (e) {
       toast.error('Error al cargar instancias RDS');
+    }
+  } else if (resourceForm.value.type === 'ECS') {
+    try {
+      const list = await awsResourcesService.getECSInstances();
+      ecsOptions.value = list.map((i) => ({ label: i.name, value: i.identifier }));
+    } catch (e) {
+      toast.error('Error al cargar servicios ECS');
     }
   }
 };
@@ -379,6 +402,8 @@ onMounted(() => {
 .chip.info { background: var(--info); color: white; }
 .chip.success { background: var(--success); color: white; }
 .chip.error { background: var(--error); color: white; }
+.chip.secondary { background: #757575; color: white; }
+.chip.ecs { background: var(--primary); color: white; }
 .btn-icon { background: none; color: var(--text-secondary); padding: 4px; }
 .btn-icon:hover { color: var(--primary); }
 .btn-icon.danger:hover { color: var(--error); }

@@ -46,9 +46,9 @@
         <div v-if="loading" class="loading">Cargando...</div>
         <div v-else class="type-list">
           <div v-for="type in resourceTypesDistribution" :key="type.type" class="type-row">
-            <span class="chip" :class="type.type === 'RDS' ? 'info' : 'secondary'">{{ type.type }}</span>
+            <span class="chip" :class="chipClassForType(type.type)">{{ type.type }}</span>
             <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: type.percentage + '%', backgroundColor: type.type === 'RDS' ? 'var(--info)' : '#757575' }">
+              <div class="progress-fill" :style="{ width: type.percentage + '%', backgroundColor: chipColorForType(type.type) }">
                 <span>{{ type.count }} ({{ type.percentage }}%)</span>
               </div>
             </div>
@@ -90,7 +90,7 @@
             <tbody>
               <tr v-for="r in recentResources" :key="r.id">
                 <td>{{ r.name }}</td>
-                <td><span class="chip info">{{ r.type }}</span></td>
+                <td><span class="chip" :class="chipClassForType(r.type)">{{ r.type }}</span></td>
                 <td><span class="chip" :class="r.state === 1 ? 'success' : 'error'">{{ r.state === 1 ? 'Activo' : 'Inactivo' }}</span></td>
                 <td>
                   <button class="btn-icon" @click="r.state === 0 ? startResource(r.id) : stopResource(r.id)" title="Iniciar/Detener">
@@ -156,6 +156,18 @@ const activeSchedulesCount = computed(() => schedules.value.filter((s) => s.isEn
 const activeSchedulesPercentage = computed(() =>
   schedulesCount.value > 0 ? Math.round((activeSchedulesCount.value / schedulesCount.value) * 100) : 0
 );
+
+const chipClassForType = (type: string) => {
+  if (type === 'RDS') return 'info';
+  if (type === 'ECS') return 'ecs';
+  return 'secondary';
+};
+
+const chipColorForType = (type: string) => {
+  if (type === 'RDS') return 'var(--info)';
+  if (type === 'ECS') return 'var(--primary)';
+  return '#757575';
+};
 
 const recentResources = computed(() =>
   [...resources.value].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5)
@@ -285,6 +297,7 @@ onMounted(() => loadData());
 .chip.success { background: var(--success); color: white; }
 .chip.error { background: var(--error); color: white; }
 .chip.secondary { background: #757575; color: white; }
+.chip.ecs { background: var(--primary); color: white; }
 
 .table-wrap { max-height: 200px; overflow-y: auto; }
 .data-table { width: 100%; border-collapse: collapse; }

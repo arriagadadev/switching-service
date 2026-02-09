@@ -1,4 +1,4 @@
-export type ResourceType = 'RDS' | 'EC2';
+export type ResourceType = 'RDS' | 'EC2' | 'ECS';
 export type State = 0 | 1;
 
 export type ResourceStateResource = {

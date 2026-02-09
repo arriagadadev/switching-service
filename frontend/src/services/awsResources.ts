@@ -26,6 +26,17 @@ export interface RDSInstance {
   publiclyAccessible?: boolean;
 }
 
+export interface ECSInstance {
+  clusterName: string;
+  serviceName: string;
+  identifier: string;
+  name: string;
+  status: string;
+  desiredCount: number;
+  runningCount: number;
+  launchType?: string;
+}
+
 export const awsResourcesService = {
   async getEC2Instances(): Promise<EC2Instance[]> {
     const response = await api.get('/aws-resources/ec2-instances');
@@ -34,6 +45,11 @@ export const awsResourcesService = {
 
   async getRDSInstances(): Promise<RDSInstance[]> {
     const response = await api.get('/aws-resources/rds-instances');
+    return response.data;
+  },
+
+  async getECSInstances(): Promise<ECSInstance[]> {
+    const response = await api.get('/aws-resources/ecs-instances');
     return response.data;
   },
 };

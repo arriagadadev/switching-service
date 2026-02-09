@@ -18,6 +18,7 @@ import deleteScheduleById from './schedules/deleteScheduleById';
 
 import listEC2Instances from './awsResources/listEC2Instances';
 import listRDSInstances from './awsResources/listRDSInstances';
+import listECSInstances from './awsResources/listECSInstances';
 
 export default {
     getResourcesStates,
@@ -37,4 +38,5 @@ export default {
     deleteScheduleById,
     listEC2Instances,
     listRDSInstances,
+    listECSInstances,
 }
