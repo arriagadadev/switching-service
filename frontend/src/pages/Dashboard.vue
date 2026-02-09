@@ -1,145 +1,148 @@
 <template>
-  <q-page class="q-pa-lg" style="width: 100%; max-width: 100%;">
-    <div class="text-h4 q-mb-lg">Dashboard</div>
+  <q-page class="dashboard-page">
+    <div class="row items-center justify-between q-mb-md">
+      <div class="text-h4">Dashboard</div>
+      <q-btn
+        flat
+        dense
+        round
+        icon="refresh"
+        @click="loadData"
+        :loading="loading"
+        class="q-mr-sm"
+      >
+        <q-tooltip>Actualizar datos</q-tooltip>
+      </q-btn>
+    </div>
 
-    <!-- Cards de estadísticas -->
-    <div class="row q-gutter-md q-mb-lg" style="width: 100%; margin-left: 0; margin-right: 0;">
-      <q-card class="col-12 col-sm-6 col-md-3" flat bordered>
-        <q-card-section>
+    <!-- KPI: 4 cards en fila compacta -->
+    <div class="row dashboard-stats q-col-gutter-sm q-mb-md">
+      <q-card class="col-6 col-md-3 stat-card" flat bordered>
+        <q-card-section class="q-pa-md">
           <div class="row items-center no-wrap">
-            <div class="col">
+            <q-icon name="storage" size="32px" color="primary" class="q-mr-sm" />
+            <div>
               <div class="text-caption text-grey-7">Total Recursos</div>
-              <div class="text-h4 text-primary">{{ resourcesCount }}</div>
+              <div class="text-h5 text-primary">{{ resourcesCount }}</div>
             </div>
-            <q-icon name="storage" size="48px" color="primary" />
           </div>
         </q-card-section>
       </q-card>
 
-      <q-card class="col-12 col-sm-6 col-md-3" flat bordered>
-        <q-card-section>
+      <q-card class="col-6 col-md-3 stat-card" flat bordered>
+        <q-card-section class="q-pa-md">
           <div class="row items-center no-wrap">
-            <div class="col">
+            <q-icon name="check_circle" size="32px" color="positive" class="q-mr-sm" />
+            <div>
               <div class="text-caption text-grey-7">Recursos Activos</div>
-              <div class="text-h4 text-positive">{{ activeResourcesCount }}</div>
-              <div class="text-caption text-grey-6">
-                {{ activeResourcesPercentage }}% del total
-              </div>
+              <div class="text-h5 text-positive">{{ activeResourcesCount }}</div>
+              <div class="text-caption text-grey-6">{{ activeResourcesPercentage }}%</div>
             </div>
-            <q-icon name="check_circle" size="48px" color="positive" />
           </div>
         </q-card-section>
       </q-card>
 
-      <q-card class="col-12 col-sm-6 col-md-3" flat bordered>
-        <q-card-section>
+      <q-card class="col-6 col-md-3 stat-card" flat bordered>
+        <q-card-section class="q-pa-md">
           <div class="row items-center no-wrap">
-            <div class="col">
+            <q-icon name="schedule" size="32px" color="primary" class="q-mr-sm" />
+            <div>
               <div class="text-caption text-grey-7">Total Programaciones</div>
-              <div class="text-h4 text-primary">{{ schedulesCount }}</div>
+              <div class="text-h5 text-primary">{{ schedulesCount }}</div>
             </div>
-            <q-icon name="schedule" size="48px" color="primary" />
           </div>
         </q-card-section>
       </q-card>
 
-      <q-card class="col-12 col-sm-6 col-md-3" flat bordered>
-        <q-card-section>
+      <q-card class="col-6 col-md-3 stat-card" flat bordered>
+        <q-card-section class="q-pa-md">
           <div class="row items-center no-wrap">
-            <div class="col">
+            <q-icon name="play_circle" size="32px" color="positive" class="q-mr-sm" />
+            <div>
               <div class="text-caption text-grey-7">Programaciones Activas</div>
-              <div class="text-h4 text-positive">{{ activeSchedulesCount }}</div>
-              <div class="text-caption text-grey-6">
-                {{ activeSchedulesPercentage }}% del total
-              </div>
+              <div class="text-h5 text-positive">{{ activeSchedulesCount }}</div>
+              <div class="text-caption text-grey-6">{{ activeSchedulesPercentage }}%</div>
             </div>
-            <q-icon name="play_circle" size="48px" color="positive" />
           </div>
         </q-card-section>
       </q-card>
     </div>
 
-    <!-- Gráficos y visualizaciones -->
-    <div class="row q-gutter-md q-mb-lg">
-      <!-- Distribución por tipo -->
-      <q-card class="col-12 col-md-6" flat bordered>
-        <q-card-section>
-          <div class="text-h6 q-mb-md">Recursos por Tipo</div>
-          <div v-if="loading" class="text-center q-pa-lg">
-            <q-spinner color="primary" size="3em" />
+    <!-- Gráficos: lado a lado -->
+    <div class="row dashboard-charts q-col-gutter-sm q-mb-md">
+      <q-card class="col-12 col-md-6 chart-card" flat bordered>
+        <q-card-section class="q-pa-md">
+          <div class="text-subtitle1 q-mb-sm">Recursos por Tipo</div>
+          <div v-if="loading" class="text-center q-pa-md">
+            <q-spinner color="primary" size="2em" />
           </div>
-          <div v-else class="q-gutter-md">
-            <div v-for="type in resourceTypesDistribution" :key="type.type" class="row items-center">
-              <div class="col-3">
+          <div v-else class="type-distribution">
+            <div v-for="type in resourceTypesDistribution" :key="type.type" class="row items-center q-mb-sm">
+              <div class="col-auto q-mr-sm">
                 <q-chip
                   :color="type.type === 'RDS' ? 'info' : 'secondary'"
                   text-color="white"
                   :icon="type.type === 'RDS' ? 'storage' : 'computer'"
+                  dense
                 >
                   {{ type.type }}
                 </q-chip>
               </div>
-              <div class="col-7">
+              <div class="col">
                 <q-linear-progress
                   :value="type.percentage / 100"
                   :color="type.type === 'RDS' ? 'info' : 'secondary'"
-                  size="25px"
+                  size="20px"
+                  class="rounded-borders"
                 >
                   <div class="absolute-full flex flex-center">
-                    <q-badge
-                      color="white"
-                      text-color="primary"
-                      :label="`${type.count} (${type.percentage}%)`"
-                    />
+                    <span class="progress-label">{{ type.count }} ({{ type.percentage }}%)</span>
                   </div>
                 </q-linear-progress>
               </div>
             </div>
-            <div v-if="resourceTypesDistribution.length === 0" class="text-center text-grey-6 q-pa-md">
-              No hay recursos disponibles
+            <div v-if="resourceTypesDistribution.length === 0" class="text-center text-grey-6 q-pa-sm">
+              No hay recursos
             </div>
           </div>
         </q-card-section>
       </q-card>
 
-      <!-- Estado de recursos -->
-      <q-card class="col-12 col-md-6" flat bordered>
-        <q-card-section>
-          <div class="text-h6 q-mb-md">Estado de Recursos</div>
-          <div v-if="loading" class="text-center q-pa-lg">
-            <q-spinner color="primary" size="3em" />
+      <q-card class="col-12 col-md-6 chart-card" flat bordered>
+        <q-card-section class="q-pa-md">
+          <div class="text-subtitle1 q-mb-sm">Estado de Recursos</div>
+          <div v-if="loading" class="text-center q-pa-md">
+            <q-spinner color="primary" size="2em" />
           </div>
-          <div v-else class="row q-gutter-md">
-            <div class="col-12 col-sm-6">
-              <div class="text-center">
+          <div v-else class="state-distribution">
+            <div class="row items-center justify-around">
+              <div class="col-auto text-center">
                 <q-circular-progress
-                  :value="activeResourcesPercentage"
-                  size="120px"
-                  :thickness="0.2"
+                  :value="activeResourcesPercentage / 100"
+                  size="80px"
+                  :thickness="0.25"
                   color="positive"
-                  track-color="grey-3"
-                  class="q-ma-md"
+                  track-color="grey-8"
+                  class="state-circle"
                 >
-                  <div class="column items-center">
-                    <div class="text-h4">{{ activeResourcesCount }}</div>
-                    <div class="text-caption text-grey-7">Activos</div>
+                  <div class="column items-center justify-center">
+                    <span class="text-h6">{{ activeResourcesCount }}</span>
+                    <span class="text-caption text-grey-7">Activos</span>
                   </div>
                 </q-circular-progress>
               </div>
-            </div>
-            <div class="col-12 col-sm-6">
-              <div class="text-center">
+              <div class="col-auto text-center">
                 <q-circular-progress
-                  :value="inactiveResourcesPercentage"
-                  size="120px"
-                  :thickness="0.2"
+                  :value="inactiveResourcesPercentage / 100"
+                  size="80px"
+                  :thickness="0.25"
                   color="negative"
-                  track-color="grey-3"
-                  class="q-ma-md"
+                  track-color="grey-8"
+                  class="state-circle"
                 >
-                  <div class="column items-center">
-                    <div class="text-h4">{{ inactiveResourcesCount }}</div>
-                    <div class="text-caption text-grey-7">Inactivos</div>
+                  <div class="column items-center justify-center">
+                    <span class="text-h6">{{ inactiveResourcesCount }}</span>
+                    <span class="text-caption text-grey-7">Inactivos</span>
                   </div>
                 </q-circular-progress>
               </div>
@@ -149,20 +152,20 @@
       </q-card>
     </div>
 
-    <!-- Tablas de recursos y programaciones recientes -->
-    <div class="row q-gutter-md" style="width: 100%; margin-left: 0; margin-right: 0;">
-      <!-- Recursos recientes -->
-      <q-card class="col-12 col-md-6" flat bordered>
-        <q-card-section>
-          <div class="row items-center justify-between q-mb-md">
-            <div class="text-h6">Recursos Recientes</div>
+    <!-- Tablas: lado a lado, mejor uso del espacio -->
+    <div class="row dashboard-tables q-col-gutter-sm">
+      <q-card class="col-12 col-md-6 table-card" flat bordered>
+        <q-card-section class="q-pa-md">
+          <div class="row items-center justify-between q-mb-sm">
+            <div class="text-subtitle1">Recursos Recientes</div>
             <q-btn
               flat
               dense
-              round
-              icon="refresh"
-              @click="loadData"
-              :loading="loading"
+              size="sm"
+              label="Ver todos"
+              icon-right="arrow_forward"
+              color="primary"
+              @click="$router.push({ name: 'resources' })"
             />
           </div>
           <q-table
@@ -171,8 +174,10 @@
             row-key="id"
             :loading="loading"
             flat
+            dense
             hide-pagination
             :rows-per-page-options="[0]"
+            class="dashboard-table"
           >
             <template v-slot:body-cell-state="props">
               <q-td :props="props">
@@ -211,7 +216,7 @@
                   size="sm"
                   class="q-ml-xs"
                 >
-                  <q-tooltip>Ver todos</q-tooltip>
+                  <q-tooltip>Ver recurso</q-tooltip>
                 </q-btn>
               </q-td>
             </template>
@@ -224,18 +229,18 @@
         </q-card-section>
       </q-card>
 
-      <!-- Programaciones recientes -->
-      <q-card class="col-12 col-md-6" flat bordered>
-        <q-card-section>
-          <div class="row items-center justify-between q-mb-md">
-            <div class="text-h6">Programaciones Recientes</div>
+      <q-card class="col-12 col-md-6 table-card" flat bordered>
+        <q-card-section class="q-pa-md">
+          <div class="row items-center justify-between q-mb-sm">
+            <div class="text-subtitle1">Programaciones Recientes</div>
             <q-btn
               flat
               dense
-              round
-              icon="refresh"
-              @click="loadData"
-              :loading="loading"
+              size="sm"
+              label="Ver todos"
+              icon-right="arrow_forward"
+              color="primary"
+              @click="$router.push({ name: 'schedules' })"
             />
           </div>
           <q-table
@@ -244,8 +249,10 @@
             row-key="id"
             :loading="loading"
             flat
+            dense
             hide-pagination
             :rows-per-page-options="[0]"
+            class="dashboard-table"
           >
             <template v-slot:body-cell-isEnabled="props">
               <q-td :props="props">
@@ -270,7 +277,7 @@
                   @click="$router.push({ name: 'schedules' })"
                   size="sm"
                 >
-                  <q-tooltip>Ver todos</q-tooltip>
+                  <q-tooltip>Ver detalle</q-tooltip>
                 </q-btn>
               </q-td>
             </template>
@@ -428,3 +435,36 @@ onMounted(() => {
   loadData();
 });
 </script>
+
+<style scoped>
+.dashboard-page {
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.dashboard-stats .stat-card,
+.dashboard-charts .chart-card,
+.dashboard-tables .table-card {
+  min-width: 0;
+}
+
+.dashboard-table :deep(.q-table__middle) {
+  max-height: 240px;
+}
+
+.state-circle :deep(.q-circular-progress__text) {
+  color: inherit;
+}
+
+.type-distribution .q-linear-progress {
+  border-radius: 4px;
+}
+
+.progress-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+</style>

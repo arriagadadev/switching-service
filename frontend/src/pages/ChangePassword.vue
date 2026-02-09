@@ -13,16 +13,29 @@
               <q-input
                 v-model="currentPassword"
                 label="Contraseña Actual *"
-                type="password"
+                :type="showCurrentPassword ? 'text' : 'password'"
                 :rules="[(val) => !!val || 'La contraseña actual es requerida']"
                 outlined
                 :disable="loading"
-              />
+                class="password-input"
+              >
+                <template v-slot:append>
+                  <q-icon
+                    :name="showCurrentPassword ? 'visibility_off' : 'visibility'"
+                    class="cursor-pointer"
+                    @click="showCurrentPassword = !showCurrentPassword"
+                  >
+                    <q-tooltip>
+                      {{ showCurrentPassword ? 'Ocultar' : 'Mostrar' }}
+                    </q-tooltip>
+                  </q-icon>
+                </template>
+              </q-input>
 
               <q-input
                 v-model="newPassword"
                 label="Nueva Contraseña *"
-                type="password"
+                :type="showNewPassword ? 'text' : 'password'"
                 :rules="[
                   (val) => !!val || 'La nueva contraseña es requerida',
                   (val) => val.length >= 8 || 'Mínimo 8 caracteres',
@@ -35,19 +48,45 @@
                 outlined
                 :disable="loading"
                 hint="Mínimo 8 caracteres, con mayúsculas, minúsculas y números"
-              />
+                class="password-input"
+              >
+                <template v-slot:append>
+                  <q-icon
+                    :name="showNewPassword ? 'visibility_off' : 'visibility'"
+                    class="cursor-pointer"
+                    @click="showNewPassword = !showNewPassword"
+                  >
+                    <q-tooltip>
+                      {{ showNewPassword ? 'Ocultar' : 'Mostrar' }}
+                    </q-tooltip>
+                  </q-icon>
+                </template>
+              </q-input>
 
               <q-input
                 v-model="confirmPassword"
                 label="Confirmar Nueva Contraseña *"
-                type="password"
+                :type="showConfirmPassword ? 'text' : 'password'"
                 :rules="[
                   (val) => !!val || 'La confirmación es requerida',
                   (val) => val === newPassword || 'Las contraseñas no coinciden',
                 ]"
                 outlined
                 :disable="loading"
-              />
+                class="password-input"
+              >
+                <template v-slot:append>
+                  <q-icon
+                    :name="showConfirmPassword ? 'visibility_off' : 'visibility'"
+                    class="cursor-pointer"
+                    @click="showConfirmPassword = !showConfirmPassword"
+                  >
+                    <q-tooltip>
+                      {{ showConfirmPassword ? 'Ocultar' : 'Mostrar' }}
+                    </q-tooltip>
+                  </q-icon>
+                </template>
+              </q-input>
 
               <div class="row justify-end q-gutter-sm q-mt-lg">
                 <q-btn
@@ -86,6 +125,9 @@ const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
 const passwordFormRef = ref<any>(null);
+const showCurrentPassword = ref(false);
+const showNewPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 const onSubmit = async () => {
   loading.value = true;
@@ -148,3 +190,40 @@ const onSubmit = async () => {
   }
 };
 </script>
+
+<style scoped>
+/* Visible text in password inputs - dark theme */
+.password-input :deep(input) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.password-input :deep(.q-field__native),
+.password-input :deep(.q-field__input) {
+  color: #ffffff !important;
+}
+
+/* Align control content - prevent misalignment with error icon */
+.password-input :deep(.q-field__control) {
+  align-items: center;
+}
+
+.password-input :deep(.q-field__control-container) {
+  align-items: center;
+  min-height: 40px;
+}
+
+.password-input :deep(.q-field__prepend) {
+  align-items: center;
+  padding-right: 8px;
+}
+
+.password-input :deep(.q-field__append) {
+  align-items: center;
+}
+
+/* Error state - ensure error icon doesn't break layout */
+.password-input :deep(.q-field--error .q-field__control) {
+  align-items: center;
+}
+</style>

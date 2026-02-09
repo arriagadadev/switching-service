@@ -101,14 +101,15 @@
           <q-tooltip v-if="miniState" class="bg-primary">Cambiar Contraseña</q-tooltip>
         </q-item>
       </q-list>
-      <div class="absolute-bottom q-pa-sm">
+      <div class="absolute-bottom q-pa-sm sidebar-toggle-wrap">
         <q-btn
           flat
           dense
           round
           :icon="miniState ? 'chevron_right' : 'chevron_left'"
           @click="toggleMini"
-          class="full-width"
+          class="sidebar-toggle-btn"
+          :class="{ 'sidebar-toggle-btn--mini': miniState }"
           :size="miniState ? 'md' : 'sm'"
         >
           <q-tooltip v-if="miniState" class="bg-primary">

@@ -88,6 +88,32 @@ $dark-hover: #2d2d2d;
     font-weight: 600;
     font-size: 0.875rem;
   }
+
+  // Botón toggle expandir/colapsar - hover más limpio
+  .sidebar-toggle-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top: 1px solid $dark-border;
+  }
+
+  .sidebar-toggle-btn {
+    color: $dark-text-secondary !important;
+    border-radius: 50%;
+    min-width: 36px;
+    min-height: 36px;
+
+    &:hover {
+      background-color: $dark-bg-tertiary !important;
+      color: $dark-text-primary !important;
+      border-radius: 50%;
+    }
+
+    &--mini {
+      min-width: 40px;
+      min-height: 40px;
+    }
+  }
 }
 
 // Contenedor principal - Dark theme
@@ -220,6 +246,12 @@ $dark-hover: #2d2d2d;
     cursor: text !important;
     color: $dark-text-primary !important;
     pointer-events: auto !important;
+    -webkit-text-fill-color: $dark-text-primary !important;
+  }
+  
+  input[type="password"] {
+    -webkit-text-fill-color: $dark-text-primary !important;
+    color: $dark-text-primary !important;
   }
   
   .q-field__native {
@@ -269,16 +301,17 @@ $dark-hover: #2d2d2d;
     }
   }
   
-  // Botón clear: evitar que se superponga al texto
-  // Dar espacio al texto para que no quede debajo del botón clear
+  // Botón clear y dropdown: espacio para que no se superpongan con el texto
+  // No usar position:absolute para no hacer que clear y dropdown se superpongan
   .q-field__control-container {
-    padding-right: 40px;
+    padding-right: 12px;
     overflow: hidden;
+    min-width: 0;
   }
 
   .q-field__native,
   .q-field__input {
-    padding-right: 8px;
+    padding-right: 4px;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -286,17 +319,11 @@ $dark-hover: #2d2d2d;
 
   .q-field__append,
   .q-field__marginal {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    height: auto;
-    min-width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    pointer-events: auto;
-    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  .q-field__append + .q-field__append {
+    padding-left: 4px;
   }
   
   // Valor seleccionado visible
