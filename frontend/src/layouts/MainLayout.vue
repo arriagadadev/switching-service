@@ -25,11 +25,12 @@
       bordered
       :width="280"
       :mini="miniState"
+      :mini-width="70"
       :breakpoint="1024"
     >
       <q-list class="q-pa-sm">
-        <q-item-label header class="text-grey-8 q-pa-sm">
-          {{ miniState ? '' : 'Navegación' }}
+        <q-item-label header class="text-grey-8 q-pa-sm" v-if="!miniState">
+          Navegación
         </q-item-label>
         <q-item
           clickable
@@ -42,9 +43,11 @@
           <q-item-section avatar>
             <q-icon name="dashboard" />
           </q-item-section>
-          <q-item-section v-if="!miniState">
+          <q-item-section>
             <q-item-label>Dashboard</q-item-label>
+            <q-item-label caption v-if="miniState">Dashboard</q-item-label>
           </q-item-section>
+          <q-tooltip v-if="miniState" class="bg-primary">Dashboard</q-tooltip>
         </q-item>
         <q-item
           clickable
@@ -57,9 +60,11 @@
           <q-item-section avatar>
             <q-icon name="storage" />
           </q-item-section>
-          <q-item-section v-if="!miniState">
+          <q-item-section>
             <q-item-label>Recursos</q-item-label>
+            <q-item-label caption v-if="miniState">Recursos</q-item-label>
           </q-item-section>
+          <q-tooltip v-if="miniState" class="bg-primary">Recursos</q-tooltip>
         </q-item>
         <q-item
           clickable
@@ -72,9 +77,11 @@
           <q-item-section avatar>
             <q-icon name="schedule" />
           </q-item-section>
-          <q-item-section v-if="!miniState">
+          <q-item-section>
             <q-item-label>Programaciones</q-item-label>
+            <q-item-label caption v-if="miniState">Programaciones</q-item-label>
           </q-item-section>
+          <q-tooltip v-if="miniState" class="bg-primary">Programaciones</q-tooltip>
         </q-item>
         <q-item
           clickable
@@ -87,30 +94,27 @@
           <q-item-section avatar>
             <q-icon name="lock" />
           </q-item-section>
-          <q-item-section v-if="!miniState">
+          <q-item-section>
             <q-item-label>Cambiar Contraseña</q-item-label>
+            <q-item-label caption v-if="miniState">Cambiar Contraseña</q-item-label>
           </q-item-section>
+          <q-tooltip v-if="miniState" class="bg-primary">Cambiar Contraseña</q-tooltip>
         </q-item>
       </q-list>
-      <div v-if="!miniState" class="absolute-bottom q-pa-md">
+      <div class="absolute-bottom q-pa-sm">
         <q-btn
           flat
           dense
           round
-          icon="chevron_left"
+          :icon="miniState ? 'chevron_right' : 'chevron_left'"
           @click="toggleMini"
           class="full-width"
-        />
-      </div>
-      <div v-else class="absolute-bottom q-pa-md">
-        <q-btn
-          flat
-          dense
-          round
-          icon="chevron_right"
-          @click="toggleMini"
-          class="full-width"
-        />
+          :size="miniState ? 'md' : 'sm'"
+        >
+          <q-tooltip v-if="miniState" class="bg-primary">
+            {{ miniState ? 'Expandir' : 'Colapsar' }}
+          </q-tooltip>
+        </q-btn>
       </div>
     </q-drawer>
 

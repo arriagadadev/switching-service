@@ -16,11 +16,29 @@ $dark-hover: #2d2d2d;
   border-right: 1px solid $dark-border;
   color: $dark-text-primary;
   
+  // Asegurar que en modo mini los iconos sean visibles
+  &.q-drawer--mini {
+    .q-item {
+      justify-content: center;
+      
+      .q-item__section--avatar {
+        min-width: auto;
+        padding: 0;
+        margin: 0 auto;
+      }
+      
+      .q-item__section--main {
+        display: none;
+      }
+    }
+  }
+  
   .q-item {
     color: $dark-text-secondary;
     border-radius: 8px;
     margin-bottom: 4px;
     transition: all 0.2s ease;
+    position: relative;
     
     &.q-item--active {
       background-color: #1976d2 !important;
@@ -47,6 +65,7 @@ $dark-hover: #2d2d2d;
     .q-icon {
       color: $dark-text-secondary;
       transition: color 0.2s ease;
+      font-size: 24px;
     }
     
     &.q-item--active .q-icon {
@@ -56,6 +75,11 @@ $dark-hover: #2d2d2d;
     .q-item__label {
       color: $dark-text-secondary;
       font-weight: 500;
+    }
+    
+    // Asegurar que los iconos sean clickeables en modo mini
+    .q-item__section--avatar {
+      min-width: 40px;
     }
   }
   
